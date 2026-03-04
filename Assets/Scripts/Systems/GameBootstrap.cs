@@ -9,9 +9,9 @@ public static class GameBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init()
     {
-        if (Object.FindObjectOfType<AutoGameGenerator>() != null) return;
+        if (Object.FindObjectOfType<RoguelikeFramework>() != null) return;
 
-        var go = new GameObject("AutoGameGenerator");
-        go.AddComponent<AutoGameGenerator>();
+        var go = new GameObject("RoguelikeFramework");
+        go.AddComponent<RoguelikeFramework>();
     }
 }
