@@ -17,6 +17,15 @@ public class RoguelikeFramework : MonoBehaviour
     private readonly List<Unit> enemyUnits = new();
     private readonly List<UnitView> views = new();
 
+    private Texture2D bgTex;
+    private Texture2D tileATex;
+    private Texture2D tileBTex;
+    private Texture2D dragonIcon;
+    private Texture2D horseIcon;
+    private Texture2D swordIcon;
+    private Texture2D bombIcon;
+    private Texture2D shieldIcon;
+
     private const int W = 8;
     private const int H = 5;
 
@@ -42,6 +51,31 @@ public class RoguelikeFramework : MonoBehaviour
     private void Start()
     {
         SetupCamera();
+        LoadArt();
+        DrawBackground();
+    }
+
+    private void LoadArt()
+    {
+        bgTex = Resources.Load<Texture2D>("Art/board_bg");
+        tileATex = Resources.Load<Texture2D>("Art/tile_a");
+        tileBTex = Resources.Load<Texture2D>("Art/tile_b");
+        dragonIcon = Resources.Load<Texture2D>("Art/icon_dragon");
+        horseIcon = Resources.Load<Texture2D>("Art/icon_horse");
+        swordIcon = Resources.Load<Texture2D>("Art/icon_sword");
+        bombIcon = Resources.Load<Texture2D>("Art/icon_bomb");
+        shieldIcon = Resources.Load<Texture2D>("Art/icon_shield");
+    }
+
+    private void DrawBackground()
+    {
+        var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        bg.name = "BG";
+        bg.transform.position = new Vector3(0, 0, 1.2f);
+        bg.transform.localScale = new Vector3(16f, 10f, 1f);
+        var r = bg.GetComponent<Renderer>();
+        r.material.color = new Color(0.12f, 0.1f, 0.14f);
+        if (bgTex != null) r.material.mainTexture = bgTex;
     }
 
     private void SetupCamera()
@@ -193,7 +227,9 @@ public class RoguelikeFramework : MonoBehaviour
                 q.transform.localScale = new Vector3(0.95f, 0.95f, 1);
                 var r = q.GetComponent<Renderer>();
                 bool dark = (x + y) % 2 == 0;
-                r.material.color = dark ? new Color(0.16f, 0.16f, 0.2f) : new Color(0.2f, 0.2f, 0.25f);
+                r.material.color = dark ? new Color(0.18f, 0.18f, 0.24f) : new Color(0.24f, 0.24f, 0.3f);
+                if (dark && tileATex != null) r.material.mainTexture = tileATex;
+                if (!dark && tileBTex != null) r.material.mainTexture = tileBTex;
             }
         }
     }
@@ -208,6 +244,8 @@ public class RoguelikeFramework : MonoBehaviour
             go.transform.localScale = new Vector3(0.8f, 0.8f, 1);
             var r = go.GetComponent<Renderer>();
             r.material.color = c;
+            var icon = PickIcon(u.name);
+            if (icon != null) r.material.mainTexture = icon;
 
             var t = new GameObject("Label");
             t.transform.position = go.transform.position + new Vector3(0, 0.58f, 0);
@@ -256,6 +294,15 @@ public class RoguelikeFramework : MonoBehaviour
         {
             if (c.name == "Cell") Destroy(c);
         }
+    }
+
+    private Texture2D PickIcon(string n)
+    {
+        if (n.Contains("帅") || n.Contains("炎魔")) return dragonIcon ?? shieldIcon;
+        if (n.Contains("马")) return horseIcon;
+        if (n.Contains("炮")) return bombIcon;
+        if (n.Contains("车") || n.Contains("卒") || n.Contains("剑")) return swordIcon;
+        return shieldIcon;
     }
 
     private Vector3 GridToWorld(int x, int y)
