@@ -40,8 +40,8 @@ public class RoguelikeFramework : MonoBehaviour
     private Texture2D bombIcon;
     private Texture2D shieldIcon;
 
-    private const int W = 8;
-    private const int H = 5;
+    private const int W = 10;
+    private const int H = 6;
 
     private class Unit
     {
@@ -54,6 +54,19 @@ public class RoguelikeFramework : MonoBehaviour
         public int y;
         public bool player;
         public bool Alive => hp > 0;
+    }
+
+    private int EffectiveAtk(Unit u)
+    {
+        int aura = 0;
+        var team = u.player ? playerUnits : enemyUnits;
+        foreach (var ally in team)
+        {
+            if (!ally.Alive || !ally.name.Contains("帅")) continue;
+            int d = Mathf.Abs(ally.x - u.x) + Mathf.Abs(ally.y - u.y);
+            if (d <= 1 && ally != u) aura += 2; // 帅：邻近光环
+        }
+        return u.atk + aura;
     }
 
     private class UnitView
@@ -133,13 +146,22 @@ public class RoguelikeFramework : MonoBehaviour
         ClearViews();
         DrawBoard();
 
-        playerUnits.Add(new Unit { name = "帅-圣", hp = 36, atk = 9, spd = 7, range = 1, x = 0, y = 2, player = true });
-        playerUnits.Add(new Unit { name = "马-梦", hp = 24, atk = 10, spd = 10, range = 1, x = 0, y = 1, player = true });
-        playerUnits.Add(new Unit { name = "炮-火", hp = 22, atk = 11, spd = 8, range = 3, x = 0, y = 3, player = true });
+        // 第一步：7个兵种全部上场（先不做变体）
+        playerUnits.Add(new Unit { name = "帅", hp = 40, atk = 8, spd = 6, range = 1, x = 0, y = 2, player = true });
+        playerUnits.Add(new Unit { name = "车", hp = 34, atk = 9, spd = 7, range = 1, x = 1, y = 1, player = true });
+        playerUnits.Add(new Unit { name = "马", hp = 28, atk = 10, spd = 10, range = 1, x = 1, y = 3, player = true });
+        playerUnits.Add(new Unit { name = "炮", hp = 24, atk = 10, spd = 8, range = 3, x = 1, y = 2, player = true });
+        playerUnits.Add(new Unit { name = "象", hp = 36, atk = 7, spd = 5, range = 1, x = 0, y = 4, player = true });
+        playerUnits.Add(new Unit { name = "士", hp = 26, atk = 8, spd = 9, range = 1, x = 0, y = 1, player = true });
+        playerUnits.Add(new Unit { name = "兵", hp = 22, atk = 7, spd = 8, range = 1, x = 2, y = 2, player = true });
 
-        enemyUnits.Add(new Unit { name = "炎魔帅", hp = 34, atk = 9, spd = 7, range = 1, x = 7, y = 2, player = false });
-        enemyUnits.Add(new Unit { name = "雷鸣车", hp = 28, atk = 8, spd = 8, range = 1, x = 7, y = 1, player = false });
-        enemyUnits.Add(new Unit { name = "卒", hp = 20, atk = 7, spd = 9, range = 1, x = 7, y = 3, player = false });
+        enemyUnits.Add(new Unit { name = "帅", hp = 40, atk = 8, spd = 6, range = 1, x = 9, y = 2, player = false });
+        enemyUnits.Add(new Unit { name = "车", hp = 34, atk = 9, spd = 7, range = 1, x = 8, y = 1, player = false });
+        enemyUnits.Add(new Unit { name = "马", hp = 28, atk = 10, spd = 10, range = 1, x = 8, y = 3, player = false });
+        enemyUnits.Add(new Unit { name = "炮", hp = 24, atk = 10, spd = 8, range = 3, x = 8, y = 2, player = false });
+        enemyUnits.Add(new Unit { name = "象", hp = 36, atk = 7, spd = 5, range = 1, x = 9, y = 4, player = false });
+        enemyUnits.Add(new Unit { name = "士", hp = 26, atk = 8, spd = 9, range = 1, x = 9, y = 1, player = false });
+        enemyUnits.Add(new Unit { name = "兵", hp = 22, atk = 7, spd = 8, range = 1, x = 7, y = 2, player = false });
 
         CreateViews(playerUnits, new Color(0.2f, 0.7f, 1f));
         CreateViews(enemyUnits, new Color(0.95f, 0.35f, 0.4f));
@@ -162,23 +184,53 @@ public class RoguelikeFramework : MonoBehaviour
         if (target == null) return;
 
         int dist = Mathf.Abs(actor.x - target.x) + Mathf.Abs(actor.y - target.y);
+        int dmg = EffectiveAtk(actor);
+
         if (dist <= actor.range)
         {
-            target.hp -= actor.atk;
+            // 马：突击伤害
+            if (actor.name.Contains("马")) dmg += 3;
+
+            // 士：有概率连击
+            bool chain = actor.name.Contains("士") && Random.value < 0.35f;
+
+            int real = ApplyDamageWithTraits(actor, target, dmg);
             if (actor.range > 1)
             {
                 SpawnProjectile(actor, target, new Color(1f, 0.75f, 0.2f));
-                battleLog = $"{actor.name} 远程攻击 {target.name} -{actor.atk}";
+                battleLog = $"{actor.name} 远程攻击 {target.name} -{real}";
             }
             else
             {
                 SpawnHitFlash(target, new Color(1f, 0.2f, 0.2f));
-                battleLog = $"{actor.name} 近战攻击 {target.name} -{actor.atk}";
+                battleLog = $"{actor.name} 近战攻击 {target.name} -{real}";
+            }
+
+            if (chain && target.Alive)
+            {
+                int real2 = ApplyDamageWithTraits(actor, target, Mathf.Max(1, dmg / 2));
+                battleLog += $" | 连击 -{real2}";
+            }
+
+            // 象：溅射（相邻敌人）
+            if (actor.name.Contains("象"))
+            {
+                var splashTargets = actor.player ? enemyUnits : playerUnits;
+                foreach (var t in splashTargets)
+                {
+                    if (!t.Alive || t == target) continue;
+                    int ad = Mathf.Abs(t.x - target.x) + Mathf.Abs(t.y - target.y);
+                    if (ad == 1)
+                    {
+                        ApplyDamageWithTraits(actor, t, Mathf.Max(1, dmg / 2));
+                        SpawnHitFlash(t, new Color(1f, 0.5f, 0.2f));
+                    }
+                }
             }
         }
         else
         {
-            StepToward(actor, target);
+            StepTowardByTrait(actor, target);
             battleLog = $"{actor.name} 向 {target.name} 移动";
         }
     }
@@ -200,23 +252,58 @@ public class RoguelikeFramework : MonoBehaviour
         return best;
     }
 
-    private void StepToward(Unit a, Unit b)
+    private int ApplyDamageWithTraits(Unit from, Unit to, int raw)
     {
-        int nx = a.x;
-        int ny = a.y;
+        // 士：闪避
+        if (to.name.Contains("士") && Random.value < 0.25f) return 0;
 
-        if (Mathf.Abs(a.x - b.x) >= Mathf.Abs(a.y - b.y))
-            nx += b.x > a.x ? 1 : -1;
-        else
-            ny += b.y > a.y ? 1 : -1;
+        int dmg = raw;
+        // 象：减伤
+        if (to.name.Contains("象")) dmg = Mathf.Max(1, Mathf.RoundToInt(dmg * 0.7f));
+        // 帅：减伤
+        if (to.name.Contains("帅")) dmg = Mathf.Max(1, Mathf.RoundToInt(dmg * 0.85f));
 
-        nx = Mathf.Clamp(nx, 0, W - 1);
-        ny = Mathf.Clamp(ny, 0, H - 1);
+        to.hp -= dmg;
+        return dmg;
+    }
 
-        if (!Occupied(nx, ny))
+    private void StepTowardByTrait(Unit a, Unit b)
+    {
+        int step = 1;
+        if (a.name.Contains("马")) step = 2; // 马：更机动
+
+        for (int i = 0; i < step; i++)
         {
-            a.x = nx;
-            a.y = ny;
+            int nx = a.x;
+            int ny = a.y;
+
+            if (a.name.Contains("士"))
+            {
+                // 士：偏斜线机动
+                nx += b.x > a.x ? 1 : -1;
+                ny += b.y > a.y ? 1 : -1;
+            }
+            else if (a.name.Contains("象"))
+            {
+                // 象：大步走（2格），取近似
+                if (Mathf.Abs(a.x - b.x) >= Mathf.Abs(a.y - b.y)) nx += (b.x > a.x ? 1 : -1);
+                else ny += (b.y > a.y ? 1 : -1);
+            }
+            else
+            {
+                if (Mathf.Abs(a.x - b.x) >= Mathf.Abs(a.y - b.y)) nx += b.x > a.x ? 1 : -1;
+                else ny += b.y > a.y ? 1 : -1;
+            }
+
+            nx = Mathf.Clamp(nx, 0, W - 1);
+            ny = Mathf.Clamp(ny, 0, H - 1);
+
+            if (!Occupied(nx, ny))
+            {
+                a.x = nx;
+                a.y = ny;
+            }
+            else break;
         }
     }
 
@@ -382,12 +469,12 @@ public class RoguelikeFramework : MonoBehaviour
 
     private Vector3 GridToWorld(int x, int y)
     {
-        return new Vector3(-3.5f + x, -2f + y, 0);
+        return new Vector3(-4.5f + x, -2.5f + y, 0);
     }
 
     private void OnGUI()
     {
-        GUI.Box(new Rect(16, 12, 440, 90), $"龙棋传说（小丑牌式框架）\n第{floor}关\n{battleLog}");
+        GUI.Box(new Rect(16, 12, 520, 95), $"龙棋传说（小丑牌式框架）\n第{floor}关 | 当前阶段：7兵种基础版（无变体）\n{battleLog}");
 
         if (state == RunState.Map)
         {
