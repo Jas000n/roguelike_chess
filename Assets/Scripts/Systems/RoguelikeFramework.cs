@@ -114,9 +114,10 @@ public class RoguelikeFramework : MonoBehaviour
     private void UpgradeUnit(Unit u)
     {
         u.star++;
-        u.hp = Mathf.RoundToInt(u.hp * 1.5f);
-        u.atk = Mathf.RoundToInt(u.atk * 1.35f);
-        u.spd += 1;
+        // 2星成长加强
+        u.hp = Mathf.RoundToInt(u.hp * 1.8f);
+        u.atk = Mathf.RoundToInt(u.atk * 1.6f);
+        u.spd += 2;
     }
 
     private void InitPreparation()
@@ -140,14 +141,19 @@ public class RoguelikeFramework : MonoBehaviour
             benchUnits.Add(CreateBaseUnit("马", true));
         }
 
-        RefreshShop();
+        // 每回合进入准备阶段自动刷新商店（免费）
+        RefreshShop(true);
         AutoMergeAll();
     }
 
-    private void RefreshShop()
+    private void RefreshShop(bool freeRefresh = false)
     {
-        if (gold < 1 && shopOffers.Count > 0) return;
-        if (shopOffers.Count > 0) gold -= 1;
+        if (!freeRefresh)
+        {
+            if (gold < 1) return;
+            gold -= 1;
+        }
+
         shopOffers.Clear();
         for (int i = 0; i < 5; i++) shopOffers.Add(baseNames[Random.Range(0, baseNames.Length)]);
     }
@@ -159,8 +165,10 @@ public class RoguelikeFramework : MonoBehaviour
         int cost = piecePrice.ContainsKey(n) ? piecePrice[n] : 3;
         if (gold < cost) { battleLog = $"金币不足（需要{cost}）"; return; }
         if (benchUnits.Count >= 8) { battleLog = "备战席已满"; return; }
+
         gold -= cost;
         benchUnits.Add(CreateBaseUnit(n, true));
+        shopOffers.RemoveAt(i); // 买走后商店减少一张，不自动补位
         battleLog = $"购买 {n} -{cost}金";
         AutoMergeAll();
     }
@@ -668,12 +676,13 @@ public class RoguelikeFramework : MonoBehaviour
         state = RunState.Reward;
         if (eDead)
         {
-            gold += 5; // 过关奖励
-            battleLog = "你赢了这一关！+5金币";
+            gold += 10; // 胜利奖励提高
+            battleLog = "你赢了这一关！+10金币";
         }
         else
         {
-            battleLog = "你失败了，调整阵容再来";
+            gold += 6; // 失败也给保底
+            battleLog = "你失败了，但仍获得 +6金币，调整阵容再来";
         }
     }
 
