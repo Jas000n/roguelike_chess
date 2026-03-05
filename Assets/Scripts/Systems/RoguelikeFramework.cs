@@ -16,7 +16,7 @@ public class RoguelikeFramework : MonoBehaviour
         return m;
     }
 
-    private enum RunState { Map, Battle, Reward }
+    private enum RunState { Map, Prepare, Battle, Reward }
     private RunState state = RunState.Map;
 
     private int floor = 1;
@@ -24,12 +24,32 @@ public class RoguelikeFramework : MonoBehaviour
     private float turnTimer;
     private readonly float baseTurnInterval = 0.55f;
     private int turnIndex;
-    private int speedLevel = 1; // 1x / 2x / 4x
+    private int speedLevel = 4; // 1x / 2x / 4x，默认4x
     private string battleLog = "点击【进入第一关】开始对战";
 
     private readonly List<Unit> playerUnits = new();
     private readonly List<Unit> enemyUnits = new();
     private readonly List<UnitView> views = new();
+
+    // 第二步：商店/备战席/站位/合成
+    private int gold = 10;
+    private bool runInitialized;
+    private readonly List<string> shopOffers = new();
+    private readonly List<Unit> benchUnits = new(); // 备战席
+    private readonly List<Unit> deploySlots = new(); // 上阵槽位（最多7）
+    private int selectedBench = -1;
+    private int selectedDeploy = -1;
+    private readonly string[] baseNames = new[] { "帅", "车", "马", "炮", "象", "士", "兵" };
+    private readonly Dictionary<string, int> piecePrice = new()
+    {
+        { "兵", 1 }, { "士", 2 }, { "象", 2 }, { "马", 3 }, { "车", 4 }, { "炮", 4 }, { "帅", 5 }
+    };
+
+    private int draggingDeploy = -1;
+    private Vector3 dragStartPos;
+    private GameObject dragGhost;
+    private bool isDragging;
+    private bool draggingFromBench;
 
     private Texture2D bgTex;
     private Texture2D tileATex;
@@ -50,6 +70,7 @@ public class RoguelikeFramework : MonoBehaviour
         public int atk;
         public int spd;
         public int range = 1; // 近战=1，远程>1
+        public int star = 1;
         public int x;
         public int y;
         public bool player;
@@ -67,6 +88,115 @@ public class RoguelikeFramework : MonoBehaviour
             if (d <= 1 && ally != u) aura += 2; // 帅：邻近光环
         }
         return u.atk + aura;
+    }
+
+    private Unit CreateBaseUnit(string n, bool player)
+    {
+        var u = new Unit { name = n, player = player };
+        switch (n)
+        {
+            case "帅": u.hp = 40; u.atk = 8; u.spd = 6; u.range = 1; break;
+            case "车": u.hp = 34; u.atk = 9; u.spd = 7; u.range = 1; break;
+            case "马": u.hp = 28; u.atk = 10; u.spd = 10; u.range = 1; break;
+            case "炮": u.hp = 24; u.atk = 10; u.spd = 8; u.range = 3; break;
+            case "象": u.hp = 36; u.atk = 7; u.spd = 5; u.range = 1; break;
+            case "士": u.hp = 26; u.atk = 8; u.spd = 9; u.range = 1; break;
+            default: u.hp = 22; u.atk = 7; u.spd = 8; u.range = 1; break;
+        }
+        return u;
+    }
+
+    private Unit CloneUnit(Unit src)
+    {
+        return new Unit { name = src.name, hp = src.hp, atk = src.atk, spd = src.spd, range = src.range, star = src.star, player = src.player, x = src.x, y = src.y };
+    }
+
+    private void UpgradeUnit(Unit u)
+    {
+        u.star++;
+        u.hp = Mathf.RoundToInt(u.hp * 1.5f);
+        u.atk = Mathf.RoundToInt(u.atk * 1.35f);
+        u.spd += 1;
+    }
+
+    private void InitPreparation()
+    {
+        state = RunState.Prepare;
+        battleStarted = false;
+        battleLog = "准备阶段：购买、上阵、调站位";
+        selectedBench = -1;
+        selectedDeploy = -1;
+
+        // 只在第一次初始化阵容；后续阶段保留上阶段购买和编队结果
+        if (!runInitialized)
+        {
+            runInitialized = true;
+            gold = 10;
+            benchUnits.Clear();
+            deploySlots.Clear();
+
+            benchUnits.Add(CreateBaseUnit("兵", true));
+            benchUnits.Add(CreateBaseUnit("兵", true));
+            benchUnits.Add(CreateBaseUnit("马", true));
+        }
+
+        RefreshShop();
+        AutoMergeAll();
+    }
+
+    private void RefreshShop()
+    {
+        if (gold < 1 && shopOffers.Count > 0) return;
+        if (shopOffers.Count > 0) gold -= 1;
+        shopOffers.Clear();
+        for (int i = 0; i < 5; i++) shopOffers.Add(baseNames[Random.Range(0, baseNames.Length)]);
+    }
+
+    private void BuyOffer(int i)
+    {
+        if (i < 0 || i >= shopOffers.Count) return;
+        string n = shopOffers[i];
+        int cost = piecePrice.ContainsKey(n) ? piecePrice[n] : 3;
+        if (gold < cost) { battleLog = $"金币不足（需要{cost}）"; return; }
+        if (benchUnits.Count >= 8) { battleLog = "备战席已满"; return; }
+        gold -= cost;
+        benchUnits.Add(CreateBaseUnit(n, true));
+        battleLog = $"购买 {n} -{cost}金";
+        AutoMergeAll();
+    }
+
+    private void AutoMergeAll()
+    {
+        bool merged;
+        do
+        {
+            merged = false;
+            var all = new List<Unit>();
+            all.AddRange(benchUnits);
+            all.AddRange(deploySlots);
+            foreach (var n in baseNames)
+            {
+                var same = all.FindAll(u => u.name == n && u.star == 1);
+                if (same.Count >= 3)
+                {
+                    int removed = 0;
+                    for (int i = benchUnits.Count - 1; i >= 0 && removed < 3; i--)
+                    {
+                        if (benchUnits[i].name == n && benchUnits[i].star == 1) { benchUnits.RemoveAt(i); removed++; }
+                    }
+                    for (int i = deploySlots.Count - 1; i >= 0 && removed < 3; i--)
+                    {
+                        if (deploySlots[i].name == n && deploySlots[i].star == 1) { deploySlots.RemoveAt(i); removed++; }
+                    }
+                    var up = CreateBaseUnit(n, true);
+                    UpgradeUnit(up);
+                    benchUnits.Add(up);
+                    battleLog = $"合成成功：{n} 升为2星";
+                    merged = true;
+                    break;
+                }
+            }
+        } while (merged);
     }
 
     private class UnitView
@@ -122,6 +252,8 @@ public class RoguelikeFramework : MonoBehaviour
 
     private void Update()
     {
+        HandleMouseDrag();
+
         if (state != RunState.Battle || !battleStarted) return;
 
         float turnInterval = baseTurnInterval / speedLevel;
@@ -132,6 +264,194 @@ public class RoguelikeFramework : MonoBehaviour
         RunOneTurn();
         RefreshViews();
         CheckBattleEnd();
+    }
+
+    private void HandleMouseDrag()
+    {
+        if (state != RunState.Prepare) return;
+
+        // 战场区域（与 OnGUI 保持一致）
+        float boardX = 32f;
+        float boardY = 136f;
+        float cellW = 70f;
+        float cellH = 55f;
+        int rows = 4;
+        int cols = 7;
+
+        // 底部面板区域（商店 + 备战席）
+        float panelX = 16f;
+        float panelY = Screen.height - 170f;
+        float benchX = panelX + 16f;
+        float benchY = panelY + 88f;
+        float benchCellW = 70f;
+        int benchCols = 8;
+
+        int FindDeployAt(int x, int y)
+        {
+            for (int i = 0; i < deploySlots.Count; i++)
+            {
+                if (deploySlots[i].x == x && deploySlots[i].y == y) return i;
+            }
+            return -1;
+        }
+
+        Vector2 GetGridAtMouse()
+        {
+            float mx = Input.mousePosition.x;
+            float myGui = Screen.height - Input.mousePosition.y;
+
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    float gx = boardX + c * cellW;
+                    float gy = boardY + r * cellH;
+                    if (mx >= gx && mx <= gx + (cellW - 4f) && myGui >= gy && myGui <= gy + (cellH - 4f))
+                    {
+                        return new Vector2(c, r);
+                    }
+                }
+            }
+
+            for (int i = 0; i < benchCols; i++)
+            {
+                float bx = benchX + i * benchCellW;
+                if (mx >= bx && mx <= bx + 65f && myGui >= benchY && myGui <= benchY + 45f)
+                {
+                    return new Vector2(-1, i);
+                }
+            }
+
+            return new Vector2(-2, -2);
+        }
+
+        // 已选中时：棋子跟随鼠标
+        if (isDragging && dragGhost != null)
+        {
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                float zDist = -0.5f - cam.transform.position.z;
+                Vector3 world = cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, zDist));
+                dragGhost.transform.position = new Vector3(world.x, world.y, -0.5f);
+            }
+        }
+
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        Vector2 clickGrid = GetGridAtMouse();
+
+        // 第一次点击：选中棋子（备战席或战场）
+        if (!isDragging)
+        {
+            if (clickGrid.x >= 0 && clickGrid.x < cols && clickGrid.y >= 0 && clickGrid.y < rows)
+            {
+                int deployIdx = FindDeployAt((int)clickGrid.x, (int)clickGrid.y);
+                if (deployIdx >= 0)
+                {
+                    draggingDeploy = deployIdx;
+                    draggingFromBench = false;
+                    isDragging = true;
+                }
+            }
+            else if (clickGrid.x == -1)
+            {
+                int benchIdx = (int)clickGrid.y;
+                if (benchIdx >= 0 && benchIdx < benchUnits.Count)
+                {
+                    draggingDeploy = benchIdx;
+                    draggingFromBench = true;
+                    isDragging = true;
+                }
+            }
+
+            if (isDragging)
+            {
+                dragGhost = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                dragGhost.name = "DragGhost";
+                dragGhost.transform.localScale = Vector3.one * 0.8f;
+                var r = dragGhost.GetComponent<Renderer>();
+                r.material = CreateRuntimeMaterial(null, new Color(0.3f, 0.8f, 1f, 0.75f));
+            }
+
+            return;
+        }
+
+        // 第二次点击：放下（类似金铲铲点击拾取/点击放置）
+        if (clickGrid.x >= 0 && clickGrid.x < cols && clickGrid.y >= 0 && clickGrid.y < rows)
+        {
+            int tx = (int)clickGrid.x;
+            int ty = (int)clickGrid.y;
+            int targetDeployIdx = FindDeployAt(tx, ty);
+
+            if (draggingFromBench)
+            {
+                if (draggingDeploy >= 0 && draggingDeploy < benchUnits.Count)
+                {
+                    if (targetDeployIdx >= 0)
+                    {
+                        battleLog = "目标格已有棋子，请放到空格";
+                    }
+                    else if (deploySlots.Count >= 7)
+                    {
+                        battleLog = "上阵已满（最多7个）";
+                    }
+                    else
+                    {
+                        var moved = benchUnits[draggingDeploy];
+                        moved.x = tx;
+                        moved.y = ty;
+                        deploySlots.Add(moved);
+                        benchUnits.RemoveAt(draggingDeploy);
+                        AutoMergeAll();
+                    }
+                }
+            }
+            else if (draggingDeploy >= 0 && draggingDeploy < deploySlots.Count)
+            {
+                if (targetDeployIdx >= 0 && targetDeployIdx != draggingDeploy)
+                {
+                    int oldX = deploySlots[draggingDeploy].x;
+                    int oldY = deploySlots[draggingDeploy].y;
+                    deploySlots[targetDeployIdx].x = oldX;
+                    deploySlots[targetDeployIdx].y = oldY;
+                }
+
+                deploySlots[draggingDeploy].x = tx;
+                deploySlots[draggingDeploy].y = ty;
+            }
+        }
+        else if (clickGrid.x == -1)
+        {
+            // 放回备战席（仅战场棋子可放回）
+            if (!draggingFromBench && draggingDeploy >= 0 && draggingDeploy < deploySlots.Count)
+            {
+                int benchIdx = (int)clickGrid.y;
+                if (benchIdx >= benchUnits.Count)
+                {
+                    var u = deploySlots[draggingDeploy];
+                    u.x = -1;
+                    u.y = -1;
+                    benchUnits.Add(u);
+                    deploySlots.RemoveAt(draggingDeploy);
+                    AutoMergeAll();
+                }
+                else
+                {
+                    battleLog = "该备战席格子已有棋子";
+                }
+            }
+        }
+
+        // 无论是否成功放置，第二次点击后结束选中
+        isDragging = false;
+        draggingDeploy = -1;
+        draggingFromBench = false;
+        if (dragGhost != null)
+        {
+            Destroy(dragGhost);
+            dragGhost = null;
+        }
     }
 
     private void StartFirstBattle()
@@ -146,22 +466,45 @@ public class RoguelikeFramework : MonoBehaviour
         ClearViews();
         DrawBoard();
 
-        // 第一步：7个兵种全部上场（先不做变体）
-        playerUnits.Add(new Unit { name = "帅", hp = 40, atk = 8, spd = 6, range = 1, x = 0, y = 2, player = true });
-        playerUnits.Add(new Unit { name = "车", hp = 34, atk = 9, spd = 7, range = 1, x = 1, y = 1, player = true });
-        playerUnits.Add(new Unit { name = "马", hp = 28, atk = 10, spd = 10, range = 1, x = 1, y = 3, player = true });
-        playerUnits.Add(new Unit { name = "炮", hp = 24, atk = 10, spd = 8, range = 3, x = 1, y = 2, player = true });
-        playerUnits.Add(new Unit { name = "象", hp = 36, atk = 7, spd = 5, range = 1, x = 0, y = 4, player = true });
-        playerUnits.Add(new Unit { name = "士", hp = 26, atk = 8, spd = 9, range = 1, x = 0, y = 1, player = true });
-        playerUnits.Add(new Unit { name = "兵", hp = 22, atk = 7, spd = 8, range = 1, x = 2, y = 2, player = true });
+        // 玩家来自备战/上阵结果（使用棋盘坐标）
+        if (deploySlots.Count == 0)
+        {
+            // 防呆：空阵容则自动带3个兵
+            var u1 = CreateBaseUnit("兵", true); u1.x = 0; u1.y = 1; deploySlots.Add(u1);
+            var u2 = CreateBaseUnit("马", true); u2.x = 1; u2.y = 1; deploySlots.Add(u2);
+            var u3 = CreateBaseUnit("炮", true); u3.x = 2; u3.y = 1; deploySlots.Add(u3);
+        }
 
-        enemyUnits.Add(new Unit { name = "帅", hp = 40, atk = 8, spd = 6, range = 1, x = 9, y = 2, player = false });
-        enemyUnits.Add(new Unit { name = "车", hp = 34, atk = 9, spd = 7, range = 1, x = 8, y = 1, player = false });
-        enemyUnits.Add(new Unit { name = "马", hp = 28, atk = 10, spd = 10, range = 1, x = 8, y = 3, player = false });
-        enemyUnits.Add(new Unit { name = "炮", hp = 24, atk = 10, spd = 8, range = 3, x = 8, y = 2, player = false });
-        enemyUnits.Add(new Unit { name = "象", hp = 36, atk = 7, spd = 5, range = 1, x = 9, y = 4, player = false });
-        enemyUnits.Add(new Unit { name = "士", hp = 26, atk = 8, spd = 9, range = 1, x = 9, y = 1, player = false });
-        enemyUnits.Add(new Unit { name = "兵", hp = 22, atk = 7, spd = 8, range = 1, x = 7, y = 2, player = false });
+        // 映射到战场坐标
+        int[,] playerPos = { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 1 }, { 1, 2 }, { 1, 3 }, { 2, 2 } };
+        for (int i = 0; i < deploySlots.Count && i < 7; i++)
+        {
+            var u = CloneUnit(deploySlots[i]);
+            u.player = true;
+            // 使用之前保存的坐标，或者使用默认值
+            if (u.x < 0 || u.x >= W || u.y < 0 || u.y >= H)
+            {
+                u.x = playerPos[i, 0];
+                u.y = playerPos[i, 1];
+            }
+            playerUnits.Add(u);
+        }
+
+        // 敌方阵容随机生成
+        enemyUnits.Clear();
+        int enemyCount = Mathf.Min(3 + floor, 7); // 随回合数增加
+        var used = new HashSet<string>();
+        for (int i = 0; i < enemyCount; i++)
+        {
+            string n;
+            do { n = baseNames[Random.Range(0, baseNames.Length)]; } while (used.Contains(n));
+            used.Add(n);
+            var u = CreateBaseUnit(n, false);
+            int[,] pos = { { 7, 2 }, { 8, 1 }, { 8, 2 }, { 8, 3 }, { 9, 1 }, { 9, 2 }, { 9, 4 } };
+            u.x = pos[i, 0];
+            u.y = pos[i, 1];
+            enemyUnits.Add(u);
+        }
 
         CreateViews(playerUnits, new Color(0.2f, 0.7f, 1f));
         CreateViews(enemyUnits, new Color(0.95f, 0.35f, 0.4f));
@@ -323,7 +666,15 @@ public class RoguelikeFramework : MonoBehaviour
 
         battleStarted = false;
         state = RunState.Reward;
-        battleLog = eDead ? "你赢了第一关！" : "你失败了，重开再来";
+        if (eDead)
+        {
+            gold += 5; // 过关奖励
+            battleLog = "你赢了这一关！+5金币";
+        }
+        else
+        {
+            battleLog = "你失败了，调整阵容再来";
+        }
     }
 
     private void DrawBoard()
@@ -365,7 +716,7 @@ public class RoguelikeFramework : MonoBehaviour
             tm.characterSize = 0.12f;
             tm.fontSize = 36;
             tm.color = Color.white;
-            tm.text = $"{u.name}\nHP:{u.hp}";
+            tm.text = $"{u.name}{u.star}★\nHP:{u.hp}";
 
             views.Add(new UnitView { unit = u, go = go, text = tm });
         }
@@ -381,7 +732,7 @@ public class RoguelikeFramework : MonoBehaviour
                 v.text.gameObject.SetActive(true);
                 v.go.transform.position = GridToWorld(v.unit.x, v.unit.y);
                 v.text.transform.position = v.go.transform.position + new Vector3(0, 0.58f, 0);
-                v.text.text = $"{v.unit.name}\nHP:{Mathf.Max(0, v.unit.hp)}";
+                v.text.text = $"{v.unit.name}{v.unit.star}★\nHP:{Mathf.Max(0, v.unit.hp)}";
             }
             else
             {
@@ -478,11 +829,94 @@ public class RoguelikeFramework : MonoBehaviour
 
         if (state == RunState.Map)
         {
-            GUI.Box(new Rect(16, 110, 360, 120), "路线选择（简化）\n[普通战斗] -> [奖励] -> [Boss]");
-            if (GUI.Button(new Rect(30, 185, 140, 30), "进入第一关"))
+            GUI.Box(new Rect(16, 110, 360, 120), "路线选择（简化）\n[准备阶段] -> [普通战斗] -> [奖励]");
+            if (GUI.Button(new Rect(30, 185, 140, 30), "进入准备"))
+            {
+                InitPreparation();
+            }
+        }
+
+        if (state == RunState.Prepare)
+        {
+            float cellW = 70f;
+            float cellH = 55f;
+            int rows = 4;
+            int cols = 7;
+
+            // 上方：战场
+            float boardX = 32f;
+            float boardY = 136f;
+            GUI.Box(new Rect(16, 110, 520, 255), "战场（拖拽布阵）");
+
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    float gx = boardX + c * cellW;
+                    float gy = boardY + r * cellH;
+
+                    Unit placed = null;
+                    int placedIdx = -1;
+                    for (int i = 0; i < deploySlots.Count; i++)
+                    {
+                        if (deploySlots[i].x == c && deploySlots[i].y == r)
+                        {
+                            placed = deploySlots[i];
+                            placedIdx = i;
+                            break;
+                        }
+                    }
+
+                    if (placed != null)
+                    {
+                        if (GUI.Button(new Rect(gx, gy, cellW - 4, cellH - 4), $"{placed.name}\n{placed.star}★"))
+                        {
+                            selectedDeploy = placedIdx;
+                        }
+                    }
+                    else
+                    {
+                        GUI.Box(new Rect(gx, gy, cellW - 4, cellH - 4), "");
+                    }
+                }
+            }
+
+            // 下方：商店 + 备战席（类似金铲铲底部操作区）
+            float panelX = 16f;
+            float panelY = Screen.height - 170f;
+            float panelW = Screen.width - 32f;
+            GUI.Box(new Rect(panelX, panelY, panelW, 154f), $"准备阶段 | 金币: {gold} | 回合:{floor}");
+
+            GUI.Label(new Rect(panelX + 16, panelY + 8, 120, 20), "商店");
+            for (int i = 0; i < shopOffers.Count; i++)
+            {
+                string n = shopOffers[i];
+                int cost = piecePrice.ContainsKey(n) ? piecePrice[n] : 3;
+                if (GUI.Button(new Rect(panelX + 16 + i * 90, panelY + 28, 85, 45), $"{n}\n{cost}金")) BuyOffer(i);
+            }
+            if (GUI.Button(new Rect(panelX + 16 + 5 * 90 + 10, panelY + 36, 120, 28), "刷新(-1)")) RefreshShop();
+
+            GUI.Label(new Rect(panelX + 16, panelY + 70, 120, 20), "备战席");
+            for (int i = 0; i < 8; i++)
+            {
+                float bx = panelX + 16 + i * 70;
+                if (i < benchUnits.Count)
+                {
+                    var u = benchUnits[i];
+                    if (GUI.Button(new Rect(bx, panelY + 88, 65, 45), $"{u.name}\n{u.star}★")) selectedBench = i;
+                }
+                else
+                {
+                    GUI.Box(new Rect(bx, panelY + 88, 65, 45), "");
+                }
+            }
+
+            if (GUI.Button(new Rect(panelX + panelW - 150, panelY + 104, 130, 35), "开始战斗"))
             {
                 StartFirstBattle();
             }
+
+            GUI.Label(new Rect(panelX + 560, panelY + 28, panelW - 720, 70), "操作：\n1) 商店购买到备战席\n2) 从备战席拖到上方战场\n3) 战场内可拖拽换位");
         }
 
         if (state == RunState.Battle)
