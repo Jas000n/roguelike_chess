@@ -157,9 +157,9 @@
 ```bash
 /Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -quit \
-  -projectPath "/Users/jason/.openclaw/workspace/DragonChessLegends" \
+  -projectPath "<YOUR_PROJECT_PATH>/DragonChessLegends" \
   -executeMethod BuildScript.BuildMac \
-  -logFile "/Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build.log"
+  -logFile "<YOUR_PROJECT_PATH>/DragonChessLegends/Builds/build.log"
 ```
 
 ---

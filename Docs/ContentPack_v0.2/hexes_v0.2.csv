@@ -1,0 +1,16 @@
+id,name,rarity,category,desc,effect_hook,ui_tag,balance_note
+rich,金币雨,蓝,经济,每回合准备阶段额外+4金币,round_gold_flat+4,ECON_STABLE,前期强中后期平滑
+interest_up,理财大师,蓝,经济,利息上限+2,get_interest_cap+2,ECON_GREED,与高存钱策略强联动
+fast_train,快速练兵,白,经济,每回合额外+2经验,round_exp_flat+2,ECON_LEVEL,加快人口节奏
+thrifty_refresh,精打细算,白,经济,每回合首次刷新商店免费,shop_refresh_first_free,ECON_SHOP,减少D牌成本
+scrap_rebate,拆解回收,蓝,经济,卖出棋子返还+1金币,sell_bonus+1,ECON_SHOP,鼓励过渡换阵
+team_atk,全军增幅,白,战斗,全队伤害提高8%,team_damage_mult+0.08,COMBAT_GLOBAL,通用稳定增强
+vanguard_wall,钢铁壁垒,蓝,羁绊,钢铁先锋单位额外减伤18%,vanguard_damage_reduction+0.18,TRAIT_VANGUARD,与2/4羁绊叠加
+rider_charge,骑兵冲锋,金,羁绊,机动骑兵首击额外+8伤害,rider_first_hit_flat+8,TRAIT_RIDER,爆发向
+cannon_master,炮火专精,金,羁绊,火力炮阵单位伤害提高25%,artillery_damage_mult+0.25,TRAIT_ARTILLERY,后排核心增强
+artillery_range,超远校准,蓝,羁绊,火力炮阵单位射程+1,artillery_range+1,TRAIT_ARTILLERY,站位容错提升
+board_plus,超载部署,金,规则,上阵人数上限+1,board_cap+1,RULE_CAP,高价值泛用
+healing,战备修复,白,战斗,每回合准备阶段上阵棋子回复20%最大生命,round_heal_deploy_percent=0.2,COMBAT_SUSTAIN,容错型
+overclocked_core,过载核心,金,战斗,全队速度+2且技能/首击伤害+10%,team_speed+2;team_damage_mult+0.10,COMBAT_SPIKE,高节奏玩法
+frontline_oath,前线誓约,蓝,战斗,前排（最前两列）单位生命+15%,frontline_hp_mult+0.15,COMBAT_FRONT,鼓励前排构筑
+precision_barrage,精准弹幕,蓝,战斗,远程单位对满血目标首击伤害+20%,ranged_first_strike_mult+0.20,COMBAT_BACKLINE,开场爆发

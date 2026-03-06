@@ -1,0 +1,10 @@
+unit_key,unit_name,family,class_tag,origin_tag,cost,hp,atk,spd,range,combat_identity,signature_mechanic,vfx_hint,sfx_hint
+chariot_tank,坦克车,车,Vanguard,Steel,3,52,8,5,1,主坦前排,受击叠层护甲（占位）,蓝白护盾脉冲,厚重金属撞击
+chariot_sport,跑车,车,Rider,Neon,3,34,11,12,1,切后排突进,首击冲刺追加伤害,青绿残影拖尾,引擎拉转+破风
+chariot_shock,震荡车,车,Vanguard,Thunder,4,42,12,7,1,近战AOE控制,命中附带小范围震荡,紫电环形冲击,电弧爆裂
+horse_raider,突袭马,马,Rider,Shadow,2,30,11,11,1,低费刺击手,首击高爆发,暗绿短线冲刺,短促突刺
+horse_banner,战旗马,马,Rider,Holy,3,34,9,10,1,机动辅助,邻格友军攻速小幅提升,蓝金旗帜光环,号角+马蹄
+horse_nightmare,梦魇马,马,Rider,Night,4,32,13,10,1,吸血追击,击杀后小额回血与再动,紫黑烟雾拖影,低沉嘶鸣
+cannon_burst,连发炮,炮,Artillery,Steel,2,26,9,10,3,持续DPS,同目标追加半次伤害,红色速射曳光,快速连射
+cannon_mortar,迫击炮,炮,Artillery,Earth,3,30,12,7,3,范围压制,主目标周围1格溅射,橙黄抛物爆点,沉闷爆炸
+cannon_missile,导弹炮,炮,Artillery,Blaze,4,28,16,7,4,高爆点杀,锁定远端高价值目标,赤橙导弹尾焰,尖啸+爆燃

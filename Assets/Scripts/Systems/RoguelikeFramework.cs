@@ -135,6 +135,24 @@ public class RoguelikeFramework : MonoBehaviour
     private Texture2D swordIcon;
     private Texture2D bombIcon;
     private Texture2D shieldIcon;
+    private Texture2D uiPanelTex;
+    private Texture2D uiPanelDarkTex;
+    private Texture2D uiButtonTex;
+    private Texture2D uiButtonHoverTex;
+    private Texture2D uiButtonPressedTex;
+
+    private Texture2D flatPanelTex;
+    private Texture2D flatButtonTex;
+    private Texture2D flatButtonHoverTex;
+    private Texture2D flatButtonActiveTex;
+
+    private GUIStyle boxStyle;
+    private GUIStyle buttonStyle;
+    private GUIStyle labelStyle;
+    private bool stylesReady;
+
+    private readonly Dictionary<string, Texture2D> hexTextures = new();
+    private readonly Dictionary<string, Texture2D> unitTextures = new();
 
     private const int W = 10;
     private const int H = 6;
@@ -147,6 +165,8 @@ public class RoguelikeFramework : MonoBehaviour
         BuildUnitDefs();
         BuildLinearStages();
         BuildHexPool();
+        LoadGeneratedUnitArt();
+        LoadGeneratedHexArt();
         RefreshShop(true);
 
         // 初始阵容
@@ -961,6 +981,34 @@ public class RoguelikeFramework : MonoBehaviour
         swordIcon = Resources.Load<Texture2D>("Art/icon_sword");
         bombIcon = Resources.Load<Texture2D>("Art/icon_bomb");
         shieldIcon = Resources.Load<Texture2D>("Art/icon_shield");
+        uiPanelTex = Resources.Load<Texture2D>("Art/UI/ui_panel");
+        uiPanelDarkTex = Resources.Load<Texture2D>("Art/UI/ui_panel_dark");
+        uiButtonTex = Resources.Load<Texture2D>("Art/UI/ui_button");
+        uiButtonHoverTex = Resources.Load<Texture2D>("Art/UI/ui_button_hover");
+        uiButtonPressedTex = Resources.Load<Texture2D>("Art/UI/ui_button_pressed");
+
+        LoadGeneratedHexArt();
+        LoadGeneratedUnitArt();
+    }
+
+    private void LoadGeneratedHexArt()
+    {
+        hexTextures.Clear();
+        foreach (var h in hexPool)
+        {
+            var tex = Resources.Load<Texture2D>($"Art/Hexes/hex_{h.id}");
+            if (tex != null) hexTextures[h.id] = tex;
+        }
+    }
+
+    private void LoadGeneratedUnitArt()
+    {
+        unitTextures.Clear();
+        foreach (var kv in unitDefs)
+        {
+            var tex = Resources.Load<Texture2D>($"Art/Units/unit_{kv.Key}");
+            if (tex != null) unitTextures[kv.Key] = tex;
+        }
     }
 
     private void DrawBackground()
@@ -1083,6 +1131,11 @@ public class RoguelikeFramework : MonoBehaviour
 
     private Texture2D PickIcon(Unit u)
     {
+        if (u?.def != null && unitTextures.TryGetValue(u.def.key, out var tex) && tex != null)
+        {
+            return tex;
+        }
+
         if (u.Family == "帅") return dragonIcon ?? shieldIcon;
         if (u.Family == "马") return horseIcon;
         if (u.Family == "炮") return bombIcon;
@@ -1092,8 +1145,8 @@ public class RoguelikeFramework : MonoBehaviour
 
     private Color PickVariantTint(Unit u)
     {
-        // 同家族不同变体做视觉区分
-        return u.def.key switch
+        // 同家族不同变体做视觉区分，并叠加敌我主色调
+        Color baseTint = u.def.key switch
         {
             "cannon_missile" => new Color(1f, 0.55f, 0.2f),
             "cannon_mortar" => new Color(0.95f, 0.75f, 0.35f),
@@ -1104,8 +1157,15 @@ public class RoguelikeFramework : MonoBehaviour
             "horse_raider" => new Color(0.6f, 0.95f, 0.6f),
             "horse_banner" => new Color(0.6f, 0.85f, 1f),
             "horse_nightmare" => new Color(0.8f, 0.55f, 1f),
-            _ => u.player ? new Color(0.75f, 0.95f, 1f) : new Color(1f, 0.78f, 0.78f)
+            _ => new Color(0.88f, 0.88f, 0.92f)
         };
+
+        // 保留原始素材主体，只做主色系偏移
+        Color allyPalette = new Color(0.62f, 0.86f, 1f);   // 冷青蓝
+        Color enemyPalette = new Color(1f, 0.58f, 0.5f);   // 暖橙红
+        Color teamTint = u.player ? allyPalette : enemyPalette;
+
+        return Color.Lerp(baseTint, teamTint, 0.38f);
     }
 
     private void SpawnProjectile(Unit from, Unit to, Color color, float scale = 0.18f, float duration = 0.14f)
@@ -1540,8 +1600,54 @@ public class RoguelikeFramework : MonoBehaviour
         GUI.Label(new Rect(x + 12, y + 102, w - 24, 20), "颜色说明：灰=未激活，蓝=2阶激活，金=4阶激活（战斗中死亡也会保留羁绊）");
     }
 
+    private Texture2D CreateFlatTexture(Color c)
+    {
+        var t = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+        t.SetPixel(0, 0, c);
+        t.Apply();
+        return t;
+    }
+
+    private void EnsureGuiStyles()
+    {
+        if (stylesReady) return;
+
+        boxStyle = new GUIStyle(GUI.skin.box);
+        buttonStyle = new GUIStyle(GUI.skin.button);
+        labelStyle = new GUIStyle(GUI.skin.label);
+
+        // 可读性优先：按钮/文本改为程序化高对比，不使用整图按钮贴图
+        flatPanelTex = CreateFlatTexture(new Color(0.06f, 0.1f, 0.16f, 0.88f));
+        flatButtonTex = CreateFlatTexture(new Color(0.14f, 0.32f, 0.52f, 0.96f));
+        flatButtonHoverTex = CreateFlatTexture(new Color(0.18f, 0.42f, 0.66f, 0.98f));
+        flatButtonActiveTex = CreateFlatTexture(new Color(0.1f, 0.24f, 0.4f, 0.98f));
+
+        boxStyle.normal.background = uiPanelTex != null ? uiPanelTex : flatPanelTex;
+        boxStyle.hover.background = boxStyle.normal.background;
+        boxStyle.active.background = boxStyle.normal.background;
+        boxStyle.padding = new RectOffset(10, 10, 8, 8);
+        boxStyle.richText = true;
+        boxStyle.normal.textColor = new Color(0.9f, 0.95f, 1f);
+
+        buttonStyle.normal.background = uiButtonTex != null ? uiButtonTex : flatButtonTex;
+        buttonStyle.hover.background = uiButtonHoverTex != null ? uiButtonHoverTex : flatButtonHoverTex;
+        buttonStyle.active.background = uiButtonPressedTex != null ? uiButtonPressedTex : flatButtonActiveTex;
+        buttonStyle.focused.background = uiButtonHoverTex != null ? uiButtonHoverTex : flatButtonHoverTex;
+        buttonStyle.fontStyle = FontStyle.Bold;
+        buttonStyle.normal.textColor = Color.white;
+        buttonStyle.hover.textColor = Color.white;
+        buttonStyle.active.textColor = new Color(0.92f, 0.96f, 1f);
+        buttonStyle.padding = new RectOffset(8, 8, 6, 6);
+        buttonStyle.alignment = TextAnchor.MiddleCenter;
+
+        labelStyle.normal.textColor = new Color(0.9f, 0.95f, 1f);
+
+        stylesReady = true;
+    }
+
     private void OnGUI()
     {
+        // 全面回退到 Unity 默认 IMGUI 样式（停用所有 AI UI 皮肤）
         string topInfo = $"金币:{gold}  等级:{playerLevel}({exp}/{ExpNeed(playerLevel)})  上阵上限:{GetBoardCap()}  连胜:{winStreak} 连败:{loseStreak}";
         GUI.Box(new Rect(16, 12, 760, 95), $"龙棋传说（M1/M2/M3 进行版）\n{topInfo}\n{battleLog}");
 
@@ -1715,7 +1821,19 @@ public class RoguelikeFramework : MonoBehaviour
                 GUI.DrawTexture(new Rect(card.x + 2, card.y + 2, card.width - 4, card.height - 4), Texture2D.whiteTexture);
                 GUI.color = old;
 
-                GUI.Box(card, $"[{h.rarity}] {h.name}\n\n{h.desc}");
+                var imageRect = new Rect(card.x + 10, card.y + 12, 72, 72);
+                if (hexTextures.TryGetValue(h.id, out var hTex) && hTex != null)
+                {
+                    GUI.DrawTexture(imageRect, hTex, ScaleMode.ScaleToFit, true);
+                }
+                else
+                {
+                    GUI.Box(imageRect, "ICON");
+                }
+
+                GUI.Label(new Rect(card.x + 90, card.y + 12, card.width - 96, 22), $"[{h.rarity}] {h.name}");
+                GUI.Label(new Rect(card.x + 90, card.y + 38, card.width - 96, 110), h.desc);
+
                 if (GUI.Button(new Rect(x + 40, 400, 140, 30), "选择")) PickHex(i);
             }
         }
