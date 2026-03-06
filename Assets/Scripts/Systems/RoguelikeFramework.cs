@@ -334,6 +334,11 @@ public class RoguelikeFramework : MonoBehaviour
                 u.x = fallbackPos[i, 0];
                 u.y = fallbackPos[i, 1];
             }
+            else
+            {
+                // 准备区GUI的Y轴是向下，战斗棋盘Y轴是向上：做一次垂直翻转，避免“排列反了”
+                u.y = 3 - u.y;
+            }
             playerUnits.Add(u);
         }
 
@@ -664,7 +669,8 @@ public class RoguelikeFramework : MonoBehaviour
     private int CountClass(List<Unit> team, string classTag)
     {
         int c = 0;
-        foreach (var u in team) if (u.Alive && u.ClassTag == classTag) c++;
+        // 设计改动：羁绊按“上阵阵容”计算，不因战斗中死亡而失效
+        foreach (var u in team) if (u.ClassTag == classTag) c++;
         return c;
     }
 
@@ -1465,37 +1471,73 @@ public class RoguelikeFramework : MonoBehaviour
 
     private void DrawSynergyClickPanel(float x, float y, float w, float h, List<Unit> team)
     {
-        GUI.Box(new Rect(x, y, w, h), "羁绊详情（点击弹出悬浮窗）");
+        if (team == null || team.Count == 0) return;
 
-        string[] classes = { "Vanguard", "Rider", "Artillery" };
-        float bx = x + 12;
-        Vector2 mp = Event.current.mousePosition;
-        for (int i = 0; i < classes.Length; i++)
+        GUI.Box(new Rect(x, y, w, h), "羁绊面板（点击查看效果/棋子池）");
+
+        // 仿金铲铲：只显示当前场上已有棋子对应的羁绊
+        var classes = new List<string>();
+        foreach (var u in team)
         {
-            int c = CountClass(team, classes[i]);
-            string label = $"{GetClassCn(classes[i])} ({c})";
-            Rect btnRect = new Rect(bx + i * 155, y + 24, 145, 26);
+            if (string.IsNullOrEmpty(u.ClassTag)) continue;
+            if (!classes.Contains(u.ClassTag)) classes.Add(u.ClassTag);
+        }
+        if (classes.Count == 0) return;
+
+        float bx = x + 10;
+        Vector2 mp = Event.current.mousePosition;
+
+        for (int i = 0; i < classes.Count; i++)
+        {
+            string cls = classes[i];
+            int c = CountClass(team, cls);
+            bool active2 = c >= 2;
+            bool active4 = c >= 4;
+
+            Rect card = new Rect(bx + i * 160, y + 24, 150, 74);
 
             Color old = GUI.color;
             Color baseColor;
-            if (c >= 4) baseColor = new Color(1f, 0.82f, 0.32f, 0.95f);      // 金
-            else if (c >= 2) baseColor = new Color(0.35f, 0.75f, 1f, 0.95f); // 蓝
-            else baseColor = new Color(0.45f, 0.45f, 0.45f, 0.9f);           // 灰
+            if (active4) baseColor = new Color(1f, 0.82f, 0.32f, 0.98f);      // 金
+            else if (active2) baseColor = new Color(0.35f, 0.75f, 1f, 0.98f); // 蓝
+            else baseColor = new Color(0.36f, 0.36f, 0.36f, 0.92f);           // 灰
 
-            bool hover = btnRect.Contains(mp);
-            GUI.color = hover ? new Color(Mathf.Min(1f, baseColor.r + 0.12f), Mathf.Min(1f, baseColor.g + 0.12f), Mathf.Min(1f, baseColor.b + 0.12f), 1f) : baseColor;
+            bool hover = card.Contains(mp);
+            Color show = hover ? new Color(Mathf.Min(1f, baseColor.r + 0.12f), Mathf.Min(1f, baseColor.g + 0.12f), Mathf.Min(1f, baseColor.b + 0.12f), 1f) : baseColor;
 
-            if (GUI.Button(btnRect, label))
+            // 外发光/边框（激活时更明显）
+            if (active2)
             {
-                selectedSynergyKey = classes[i];
+                GUI.color = active4 ? new Color(1f, 0.9f, 0.45f, 0.45f) : new Color(0.45f, 0.85f, 1f, 0.4f);
+                GUI.DrawTexture(new Rect(card.x - 3, card.y - 3, card.width + 6, card.height + 6), Texture2D.whiteTexture);
+            }
+
+            GUI.color = show;
+            GUI.DrawTexture(card, Texture2D.whiteTexture);
+            GUI.color = new Color(0.08f, 0.11f, 0.16f, 0.96f);
+            GUI.DrawTexture(new Rect(card.x + 2, card.y + 2, card.width - 4, card.height - 4), Texture2D.whiteTexture);
+            GUI.color = old;
+
+            string status = active4 ? "★★ 4阶激活" : active2 ? "★ 2阶激活" : "未激活";
+            GUI.Label(new Rect(card.x + 8, card.y + 6, card.width - 16, 18), $"{GetClassCn(cls)}");
+            GUI.Label(new Rect(card.x + 8, card.y + 24, card.width - 16, 18), $"数量: {c}  (2/4)");
+            GUI.Label(new Rect(card.x + 8, card.y + 42, card.width - 16, 18), $"状态: {status}");
+
+            if (active2)
+            {
+                GUI.Label(new Rect(card.x + card.width - 52, card.y + 4, 44, 18), active4 ? "MAX" : "ON");
+            }
+
+            if (GUI.Button(card, ""))
+            {
+                selectedSynergyKey = cls;
                 string info = GetSynergyEffectDesc(selectedSynergyKey, c) + "\n" +
                               $"包含棋子：{GetUnitsOfClassText(selectedSynergyKey)}";
                 ShowTooltip(info);
             }
-            GUI.color = old;
         }
 
-        GUI.Label(new Rect(x + 12, y + 58, w - 24, h - 62), "提示：灰=未成型，蓝=激活，金=高阶激活");
+        GUI.Label(new Rect(x + 12, y + 102, w - 24, 20), "颜色说明：灰=未激活，蓝=2阶激活，金=4阶激活（战斗中死亡也会保留羁绊）");
     }
 
     private void OnGUI()
@@ -1619,6 +1661,8 @@ public class RoguelikeFramework : MonoBehaviour
             }
 
             if (GUI.Button(new Rect(panelX + panelW - 160, panelY + 100, 140, 36), "开始战斗")) StartBattle();
+
+            DrawSynergyClickPanel(548, 220, 660, 126, deploySlots);
         }
 
         if (state == RunState.Battle)
