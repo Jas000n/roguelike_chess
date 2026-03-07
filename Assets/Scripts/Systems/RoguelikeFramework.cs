@@ -70,6 +70,13 @@ public class RoguelikeFramework : MonoBehaviour
         public string desc;
     }
 
+    private class RewardDef
+    {
+        public string id;
+        public string name;
+        public string desc;
+    }
+
     private Material CreateRuntimeMaterial(Texture2D tex, Color color)
     {
         Shader s = Shader.Find("Universal Render Pipeline/Unlit");
@@ -100,9 +107,14 @@ public class RoguelikeFramework : MonoBehaviour
     private readonly List<HexDef> selectedHexes = new();
     private readonly List<HexDef> currentHexOffers = new();
 
+    private readonly List<RewardDef> rewardPool = new();
+    private readonly List<RewardDef> currentRewardOffers = new();
+    private bool pendingHexAfterReward;
+
     private int gold = 10;
     private int playerLevel = 1;
     private int exp;
+    private int playerLife = 30;
     private int winStreak;
     private int loseStreak;
     private int battleStartedTurn;
@@ -167,6 +179,7 @@ public class RoguelikeFramework : MonoBehaviour
         BuildUnitDefs();
         BuildLinearStages();
         BuildHexPool();
+        BuildRewardPool();
         LoadGeneratedUnitArt();
         LoadGeneratedHexArt();
         RefreshShop(true);
@@ -302,6 +315,81 @@ public class RoguelikeFramework : MonoBehaviour
     private void AddHex(string id, string name, string rarity, string desc)
     {
         hexPool.Add(new HexDef { id = id, name = name, rarity = rarity, desc = desc });
+    }
+
+    private void BuildRewardPool()
+    {
+        rewardPool.Clear();
+        rewardPool.Add(new RewardDef { id = "gold_big", name = "藏宝箱", desc = "立即获得 +10 金币" });
+        rewardPool.Add(new RewardDef { id = "heal", name = "战地医疗", desc = "恢复 8 点生命" });
+        rewardPool.Add(new RewardDef { id = "exp", name = "战术复盘", desc = "获得 6 点经验" });
+        rewardPool.Add(new RewardDef { id = "unit_low", name = "招募新兵", desc = "获得 1 个随机 1-3 费棋子" });
+        rewardPool.Add(new RewardDef { id = "reroll_pack", name = "补给券", desc = "免费刷新商店并额外 +2 金币" });
+    }
+
+    private void RollRewardOffers()
+    {
+        currentRewardOffers.Clear();
+        var copy = new List<RewardDef>(rewardPool);
+        for (int i = 0; i < 3 && copy.Count > 0; i++)
+        {
+            int idx = UnityEngine.Random.Range(0, copy.Count);
+            currentRewardOffers.Add(copy[idx]);
+            copy.RemoveAt(idx);
+        }
+    }
+
+    private void PickReward(int idx)
+    {
+        if (idx < 0 || idx >= currentRewardOffers.Count) return;
+
+        var r = currentRewardOffers[idx];
+        switch (r.id)
+        {
+            case "gold_big":
+                gold += 10;
+                battleLog = "奖励：+10 金币";
+                break;
+            case "heal":
+                playerLife = Mathf.Min(30, playerLife + 8);
+                battleLog = "奖励：恢复 8 生命";
+                break;
+            case "exp":
+                GainExp(6);
+                battleLog = "奖励：+6 经验";
+                break;
+            case "unit_low":
+                if (benchUnits.Count < 8)
+                {
+                    string key = RollShopKeyByLevel();
+                    benchUnits.Add(CreateUnit(key, true));
+                    battleLog = $"奖励：获得 {unitDefs[key].name}";
+                }
+                else
+                {
+                    gold += 4;
+                    battleLog = "备战席满，改为 +4 金币";
+                }
+                break;
+            case "reroll_pack":
+                RefreshShop(true);
+                gold += 2;
+                battleLog = "奖励：免费刷新商店 +2 金币";
+                break;
+        }
+
+        currentRewardOffers.Clear();
+
+        if (pendingHexAfterReward)
+        {
+            pendingHexAfterReward = false;
+            RollHexOffers();
+            state = RunState.Hex;
+            battleLog += " | 海克斯三选一";
+            return;
+        }
+
+        StartPreparationForCurrentStage();
     }
 
     #endregion
@@ -456,10 +544,21 @@ public class RoguelikeFramework : MonoBehaviour
             winStreak = 0;
             int reward = 4;
             gold += reward;
-            battleLog = $"失败，保底 +{reward}金币";
+
+            int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power, 2, 12);
+            playerLife -= lifeLoss;
+            battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss}";
+
+            if (playerLife <= 0)
+            {
+                playerLife = 0;
+                state = RunState.GameOver;
+                battleLog += " | 生命耗尽，挑战结束";
+                return;
+            }
         }
 
-        bool giveHex = stages[stageIndex].giveHex;
+        pendingHexAfterReward = stages[stageIndex].giveHex;
         stageIndex++;
 
         if (stageIndex >= stages.Count)
@@ -469,38 +568,9 @@ public class RoguelikeFramework : MonoBehaviour
             return;
         }
 
-        if (giveHex)
-        {
-            RollHexOffers();
-            state = RunState.Hex;
-            battleLog += " | 海克斯三选一";
-            return;
-        }
-
-        StartPreparationForCurrentStage();
-    }
-
-    private void NextAfterReward()
-    {
-        if (stageIndex >= stages.Count)
-        {
-            state = RunState.GameOver;
-            return;
-        }
-
-        bool giveHex = stages[stageIndex].giveHex;
-        stageIndex++;
-
-        if (giveHex)
-        {
-            RollHexOffers();
-            state = RunState.Hex;
-            battleLog = "海克斯选择：三选一";
-            return;
-        }
-
-        state = RunState.Stage;
-        battleLog = "继续前进到下一关";
+        RollRewardOffers();
+        state = RunState.Reward;
+        battleLog += " | 战后奖励三选一";
     }
 
     #endregion
@@ -652,43 +722,54 @@ public class RoguelikeFramework : MonoBehaviour
             all.AddRange(benchUnits);
             all.AddRange(deploySlots);
 
-            // 同 key 才可合
-            var countByKey = new Dictionary<string, List<Unit>>();
-            foreach (var u in all)
+            // 先尝试 2星->3星，再尝试 1星->2星
+            int[] mergeStars = { 2, 1 };
+            foreach (int fromStar in mergeStars)
             {
-                if (u.star != 1) continue;
-                if (!countByKey.ContainsKey(u.def.key)) countByKey[u.def.key] = new List<Unit>();
-                countByKey[u.def.key].Add(u);
-            }
-
-            foreach (var kv in countByKey)
-            {
-                if (kv.Value.Count < 3) continue;
-
-                int removed = 0;
-                for (int i = benchUnits.Count - 1; i >= 0 && removed < 3; i--)
+                var countByKey = new Dictionary<string, List<Unit>>();
+                foreach (var u in all)
                 {
-                    if (benchUnits[i].def.key == kv.Key && benchUnits[i].star == 1)
-                    {
-                        benchUnits.RemoveAt(i);
-                        removed++;
-                    }
-                }
-                for (int i = deploySlots.Count - 1; i >= 0 && removed < 3; i--)
-                {
-                    if (deploySlots[i].def.key == kv.Key && deploySlots[i].star == 1)
-                    {
-                        deploySlots.RemoveAt(i);
-                        removed++;
-                    }
+                    if (u.star != fromStar) continue;
+                    if (!countByKey.ContainsKey(u.def.key)) countByKey[u.def.key] = new List<Unit>();
+                    countByKey[u.def.key].Add(u);
                 }
 
-                var up = CreateUnit(kv.Key, true);
-                UpgradeUnit(up);
-                benchUnits.Add(up);
-                battleLog = $"合成成功：{up.Name} 升为2星";
-                merged = true;
-                break;
+                foreach (var kv in countByKey)
+                {
+                    if (kv.Value.Count < 3) continue;
+
+                    int removed = 0;
+                    for (int i = benchUnits.Count - 1; i >= 0 && removed < 3; i--)
+                    {
+                        if (benchUnits[i].def.key == kv.Key && benchUnits[i].star == fromStar)
+                        {
+                            benchUnits.RemoveAt(i);
+                            removed++;
+                        }
+                    }
+                    for (int i = deploySlots.Count - 1; i >= 0 && removed < 3; i--)
+                    {
+                        if (deploySlots[i].def.key == kv.Key && deploySlots[i].star == fromStar)
+                        {
+                            deploySlots.RemoveAt(i);
+                            removed++;
+                        }
+                    }
+
+                    var up = CreateUnit(kv.Key, true);
+                    for (int s = 1; s <= fromStar; s++) UpgradeUnit(up);
+                    up.star = Mathf.Clamp(fromStar + 1, 1, 3);
+
+                    benchUnits.Add(up);
+                    battleLog = fromStar == 1
+                        ? $"合成成功：{up.Name} 升为2星"
+                        : $"超级合成：{up.Name} 升为3星";
+
+                    merged = true;
+                    break;
+                }
+
+                if (merged) break;
             }
         } while (merged);
     }
@@ -1829,7 +1910,7 @@ public class RoguelikeFramework : MonoBehaviour
         GUI.skin.button = buttonStyle;
         GUI.skin.label = labelStyle;
 
-        string topInfo = $"金币:{gold}  等级:{playerLevel}({exp}/{ExpNeed(playerLevel)})  上阵上限:{GetBoardCap()}  连胜:{winStreak} 连败:{loseStreak}";
+        string topInfo = $"生命:{playerLife}  金币:{gold}  等级:{playerLevel}({exp}/{ExpNeed(playerLevel)})  上阵上限:{GetBoardCap()}  连胜:{winStreak} 连败:{loseStreak}";
         GUI.Box(new Rect(16, 12, 860, 96), "");
         GUI.Label(new Rect(30, 18, 840, 20), "龙棋传说 | 中国象棋 x 自走棋 x 海克斯构筑");
         GUI.Label(new Rect(30, 42, 840, 20), topInfo);
@@ -2006,10 +2087,27 @@ public class RoguelikeFramework : MonoBehaviour
 
         if (state == RunState.Reward)
         {
-            GUI.Box(new Rect(16, 220, 420, 130), "结算\n可继续下一关（线性）\n关卡奖励与连胜经济已生效");
-            if (GUI.Button(new Rect(30, 315, 140, 30), "继续")) NextAfterReward();
-            if (GUI.Button(new Rect(180, 315, 140, 30), showBattleStats ? "隐藏战斗统计" : "显示战斗统计")) showBattleStats = !showBattleStats;
-            if (showBattleStats) DrawBattleStats(548, 170, 660, 470);
+            GUI.Box(new Rect(16, 220, 760, 280), "战后奖励（三选一）");
+            for (int i = 0; i < currentRewardOffers.Count; i++)
+            {
+                var r = currentRewardOffers[i];
+                float x = 30 + i * 240;
+
+                Color old = GUI.color;
+                GUI.color = new Color(0.28f, 0.52f, 0.8f, 0.95f);
+                GUI.DrawTexture(new Rect(x, 260, 220, 180), Texture2D.whiteTexture);
+                GUI.color = new Color(0.08f, 0.1f, 0.15f, 0.98f);
+                GUI.DrawTexture(new Rect(x + 2, 262, 216, 176), Texture2D.whiteTexture);
+                GUI.color = old;
+
+                GUI.Label(new Rect(x + 12, 276, 196, 28), r.name);
+                GUI.Label(new Rect(x + 12, 310, 196, 82), r.desc);
+
+                if (GUI.Button(new Rect(x + 40, 400, 140, 30), "选择")) PickReward(i);
+            }
+
+            if (GUI.Button(new Rect(30, 462, 170, 30), showBattleStats ? "隐藏战斗统计" : "显示战斗统计")) showBattleStats = !showBattleStats;
+            if (showBattleStats) DrawBattleStats(790, 170, 418, 470);
         }
 
         if (state == RunState.Hex)
@@ -2061,9 +2159,12 @@ public class RoguelikeFramework : MonoBehaviour
                 gold = 10;
                 playerLevel = 1;
                 exp = 0;
+                playerLife = 30;
                 winStreak = 0;
                 loseStreak = 0;
                 selectedHexes.Clear();
+                currentRewardOffers.Clear();
+                pendingHexAfterReward = false;
                 benchUnits.Clear();
                 deploySlots.Clear();
                 benchUnits.Add(CreateUnit("soldier_sword", true));
