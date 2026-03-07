@@ -289,6 +289,58 @@ public class RoguelikeFramework : MonoBehaviour
         RedrawPrepareBoard();
     }
 
+    // 最小自动回归：自动推进 3 关，校验核心状态机闭环不被改坏。
+    private void DevRunRegression3Floors()
+    {
+        int startFloor = stageIndex;
+        int target = Mathf.Min(stages.Count, startFloor + 3);
+        int safety = 80;
+        int steps = 0;
+        bool blocked = false;
+
+        while (stageIndex < target && state != RunState.GameOver && safety-- > 0)
+        {
+            steps++;
+            switch (state)
+            {
+                case RunState.Stage:
+                    StartPreparationForCurrentStage();
+                    break;
+                case RunState.Prepare:
+                    if (deploySlots.Count == 0) AutoDeployFallback();
+                    StartBattle();
+                    // 回归模式下快速收敛，避免等待实时回合
+                    if (state == RunState.Battle && battleStarted) EndBattle(true);
+                    break;
+                case RunState.Battle:
+                    if (!battleStarted) { blocked = true; }
+                    else EndBattle(true);
+                    break;
+                case RunState.Reward:
+                    if (currentRewardOffers.Count == 0) RollRewardOffers();
+                    PickReward(0);
+                    break;
+                case RunState.Hex:
+                    if (currentHexOffers.Count == 0) RollHexOffers();
+                    PickHex(0);
+                    break;
+                case RunState.GameOver:
+                    blocked = true;
+                    break;
+            }
+
+            if (blocked) break;
+        }
+
+        bool pass = stageIndex >= target;
+        string result = pass
+            ? $"[DEV] 3关回归通过 | {startFloor + 1}->{target} | steps:{steps} | life:{playerLife} gold:{gold}"
+            : $"[DEV] 3关回归未通过 | state:{state} floor:{stageIndex + 1} target:{target} steps:{steps}";
+
+        battleLog = result;
+        Debug.Log(result);
+    }
+
     #region Setup Data
 
     private void BuildUnitDefs()
@@ -2019,6 +2071,10 @@ public class RoguelikeFramework : MonoBehaviour
         if (GUI.Button(new Rect(950, 46, 130, 28), "开发重开"))
         {
             RestartRun();
+        }
+        if (GUI.Button(new Rect(810, 14, 130, 60), "自动回归3关"))
+        {
+            DevRunRegression3Floors();
         }
 
         GUI.Box(new Rect(16, 112, 560, 92), "");

@@ -54,3 +54,21 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 1. 增加最小自动回归（自动推进并记录每关结果）
 2. 跑一轮海克斯/奖励闭环并检查异常日志
 3. 继续做海克斯与羁绊联动质量提升（优先高区分度）
+
+## 2026-03-07 03:10 EST
+### Done
+- 新增最小自动回归入口 `自动回归3关`
+- 实现 `DevRunRegression3Floors()`：自动推进 Stage->Prepare->Battle->Reward->Hex 闭环，默认跑 3 关并输出摘要
+- 回归中准备阶段会自动补上阵（`AutoDeployFallback`），避免空阵容导致假失败
+
+### Verify
+- 静态验证：方法覆盖全部 RunState，含 safety 防死循环
+- 结果可观测：写入 `battleLog` + `Debug.Log`，可直接在游戏内和控制台查看回归结果
+- 影响面：仅开发验证入口，不改战斗数值和正式流程分支
+
+### Found
+- 目前是“强制胜利式回归”，适合流程稳定性验证，不代表平衡性验证
+
+### Next
+1. 增加“真实战斗回归模式”（不强制胜利，跑到战斗结束）
+2. 修一个高价值反馈点：战斗失败原因可读化（伤害来源/关键触发提示）
