@@ -632,6 +632,33 @@ public class RoguelikeFramework : MonoBehaviour
         return basePool[UnityEngine.Random.Range(0, basePool.Count)];
     }
 
+    private string BuildBattleOutcomeDetail(bool win)
+    {
+        int allyAlive = playerUnits.FindAll(u => u.Alive).Count;
+        int enemyAlive = enemyUnits.FindAll(u => u.Alive).Count;
+
+        if (win)
+        {
+            return $"我方存活:{allyAlive} 敌方存活:{enemyAlive}";
+        }
+
+        int enemyHpLeft = 0;
+        Unit topThreat = null;
+        for (int i = 0; i < enemyUnits.Count; i++)
+        {
+            var e = enemyUnits[i];
+            if (!e.Alive) continue;
+            enemyHpLeft += Mathf.Max(0, e.hp);
+            if (topThreat == null || e.damageDealt > topThreat.damageDealt) topThreat = e;
+        }
+
+        string threatTxt = topThreat == null
+            ? "关键威胁:无"
+            : $"关键威胁:{topThreat.Name} 造成{topThreat.damageDealt}伤害";
+
+        return $"我方存活:{allyAlive} 敌方存活:{enemyAlive} 敌方剩余生命:{enemyHpLeft} | {threatTxt}";
+    }
+
     private void EndBattle(bool win)
     {
         battleStarted = false;
@@ -642,7 +669,7 @@ public class RoguelikeFramework : MonoBehaviour
             loseStreak = 0;
             int reward = 8 + Mathf.Min(5, stages[stageIndex].power);
             gold += reward;
-            battleLog = $"胜利！+{reward}金币";
+            battleLog = $"胜利！+{reward}金币 | {BuildBattleOutcomeDetail(true)}";
         }
         else
         {
@@ -653,7 +680,7 @@ public class RoguelikeFramework : MonoBehaviour
 
             int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power, 2, 12);
             playerLife -= lifeLoss;
-            battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss}";
+            battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss} | {BuildBattleOutcomeDetail(false)}";
 
             if (playerLife <= 0)
             {

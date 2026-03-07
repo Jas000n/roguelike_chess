@@ -72,3 +72,20 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 增加“真实战斗回归模式”（不强制胜利，跑到战斗结束）
 2. 修一个高价值反馈点：战斗失败原因可读化（伤害来源/关键触发提示）
+
+## 2026-03-07 03:11 EST
+### Done
+- 强化战斗结算反馈：新增 `BuildBattleOutcomeDetail()`
+- 胜利日志增加双方存活数量
+- 失败日志增加敌方剩余生命与“关键威胁单位（最高输出）”信息，帮助理解失败原因
+
+### Verify
+- 静态验证：`EndBattle()` 新增信息仅依赖已有 `playerUnits/enemyUnits` 战斗态数据
+- 风险检查：不改结算奖励、不改扣血公式，仅增强可解释反馈
+
+### Found
+- 当前关键威胁只看“造成伤害最高”，下一步可加入“承伤最高/控制触发”维度
+
+### Next
+1. 在战斗统计面板补充“失败复盘摘要”（MVP伤害/承伤）
+2. 做一轮真实战斗回归（非强制胜利）验证日志一致性
