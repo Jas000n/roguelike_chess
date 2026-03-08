@@ -113,3 +113,48 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 1. 在 Unity 内跑一轮强制 3 关回归 + 一轮真实战斗回归，确认拆分无行为回归
 2. 继续 Stage A1：抽离 Economy/Shop 相关方法到独立 partial 文件
 3. 逐步补“最小可脚本化回归”入口，减少每次改动后的手工验证成本
+
+## 2026-03-07 04:35 EST
+### Done
+- 执行持续迭代第1轮（稳定性）：清理 Unity 过时 API 告警
+- `GameBootstrap` 从 `FindObjectOfType` 升级为 `FindFirstObjectByType`
+- `AutoGameGenerator` 中两处 `FindObjectsOfType` 升级为 `FindObjectsByType(..., FindObjectsSortMode.None)`
+
+### Verify
+- 批处理 Build 成功（见 `Builds/build_devloop_cycle1.log`）
+- 旧告警（上述 3 处）不再出现
+
+### Next
+1. 持续迭代第2轮：提升核心可玩深度（经济/构筑决策）
+2. 设计并实现“可脚本化真实战斗回归”摘要，减少手工试错
+3. 开始 Stage A2（数据配置外置，降低单文件改动风险）
+
+## 2026-03-07 12:15 EST
+### Done
+- 玩法深化（Steam 品质向）：新增“阵营羁绊”并接入真实战斗数值，不再只有职业羁绊
+  - 新增阵营计数与中文映射：`CountOrigin`, `GetOriginCn`, `GetUnitsOfOriginText`
+  - Tooltip / 羁绊摘要加入阵营信息，构筑反馈更完整
+  - 战斗公式接入阵营效果：
+    - `Blaze`：阵营内增伤
+    - `Steel`：阵营内减伤
+    - `Thunder`：阵营内速度加成
+    - `Night`：首击追加伤害（每单位一次）
+    - `Shadow`：概率额外暴击增伤
+- 单位状态扩展：新增 `usedOriginProc`，用于一次性阵营触发管理
+- 保持开发验证闭环：新增后重新批处理构建通过（`build_devloop_cycle9.log`）
+
+### Verify
+- Build 成功：`Builds/build_devloop_cycle9.log`
+- 真机触发 50 轮平衡回归（键位 `B`）后，日志新增数据：
+  - 2026-03-07 12:04:09：8关通关 25/50，平均到达 7.76，平均生命 5.5
+  - 2026-03-07 12:04:28：8关通关 23/50，平均到达 7.78，平均生命 4.3
+  - 报告位置：`~/Library/Application Support/DefaultCompany/DragonChessLegends/DevReports/balance_50_report.log`
+
+### Found
+- 自动截图权限弹窗会打断“点击+截图”流水线，但不影响构建和日志型回归
+- `4先锋`触发率仍偏低（已从 0 出现到偶发），需继续做低费先锋池和商店权重微调
+
+### Next
+1. 继续 50 轮 x 4 组平衡回归，目标：`4先锋`触发率 >= 10%
+2. 商店概率重构（前中期提高 1~2费命中，后期再放开 4~5费）
+3. 阵营羁绊 UI 面板独立卡片化（职业/阵营双栏），提升可读性与策略表达

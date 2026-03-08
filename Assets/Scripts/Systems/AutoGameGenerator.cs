@@ -179,7 +179,7 @@ public class CellClickListener : MonoBehaviour
 
     void ClearCellHighlights()
     {
-        GameObject[] allObjs = FindObjectsOfType<GameObject>();
+        GameObject[] allObjs = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         foreach (var obj in allObjs)
         {
             if (obj.name == "Highlight")
@@ -242,7 +242,7 @@ public class PieceDisplay : MonoBehaviour
 
     void ClearCellHighlights()
     {
-        GameObject[] allObjs = FindObjectsOfType<GameObject>();
+        GameObject[] allObjs = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
         foreach (var obj in allObjs)
         {
             if (obj.name == "Highlight")

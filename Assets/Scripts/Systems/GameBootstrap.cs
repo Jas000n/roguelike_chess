@@ -9,7 +9,7 @@ public static class GameBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init()
     {
-        if (Object.FindObjectOfType<RoguelikeFramework>() != null) return;
+        if (Object.FindFirstObjectByType<RoguelikeFramework>() != null) return;
 
         var go = new GameObject("RoguelikeFramework");
         go.AddComponent<RoguelikeFramework>();

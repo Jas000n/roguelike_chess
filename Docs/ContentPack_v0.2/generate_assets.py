@@ -40,6 +40,12 @@ UNITS = {
     "unit_cannon_burst": "game unit portrait, burst cannon, multi barrel rapid fire machine, red accents",
     "unit_cannon_mortar": "game unit portrait, mortar cannon, high-angle short barrel, orange explosion motif",
     "unit_cannon_missile": "game unit portrait, missile cannon, long barrel with rocket pods, orange red thruster flame",
+    "unit_cannon_sniper": "game unit portrait, sniper cannon with elongated rail barrel and frost-blue scope glow, precise and elegant silhouette",
+    "unit_cannon_arc": "game unit portrait, arc cannon with tesla coils and violet electric arcs, compact rapid discharge design",
+    "unit_chariot_bulwark": "game unit portrait, bulwark chariot with heavy stone-steel shield plating, defensive fortress profile",
+    "unit_chariot_ram": "game unit portrait, siege ram chariot with blazing reinforced horn and ember exhaust, brutal impact style",
+    "unit_guard_poison": "game unit portrait, poison assassin guard with emerald daggers and toxic mist trails, agile lethal posture",
+    "unit_guard_mirror": "game unit portrait, mirror assassin guard with reflective crystalline blades and misty afterimages, high-speed strike vibe",
 }
 
 def txt2img(prompt, out_path: Path, steps=18, cfg=6.5, w=1024, h=1024):

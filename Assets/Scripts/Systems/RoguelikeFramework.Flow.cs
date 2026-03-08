@@ -1,7 +1,60 @@
 using UnityEngine;
+using System.Collections.Generic;
+using System.IO;
+using System;
 
 public partial class RoguelikeFramework
 {
+    private class DevCompPlan
+    {
+        public string id;
+        public string name;
+        public string difficulty;
+        public string[] classes;
+        public string[] preferredKeys;
+        public int rerollBudget;
+    }
+
+    private readonly List<DevCompPlan> devPlans = new()
+    {
+        new DevCompPlan
+        {
+            id = "easy_vanguard_artillery",
+            name = "钢铁炮阵",
+            difficulty = "易成型",
+            classes = new[] { "Vanguard", "Artillery" },
+            preferredKeys = new[] { "soldier_phalanx", "chariot_tank", "chariot_bulwark", "cannon_burst", "cannon_arc", "cannon_scout", "cannon_mortar" },
+            rerollBudget = 1
+        },
+        new DevCompPlan
+        {
+            id = "easy_rider_artillery",
+            name = "骑炮速攻",
+            difficulty = "易成型",
+            classes = new[] { "Rider", "Artillery" },
+            preferredKeys = new[] { "horse_raider", "horse_banner", "chariot_sport", "cannon_burst", "cannon_scout", "cannon_sniper" },
+            rerollBudget = 1
+        },
+        new DevCompPlan
+        {
+            id = "hard_assassin_4",
+            name = "四刺爆发",
+            difficulty = "难成型",
+            classes = new[] { "Assassin", "Rider" },
+            preferredKeys = new[] { "guard_assassin", "guard_blade", "guard_poison", "guard_mirror", "horse_nightmare" },
+            rerollBudget = 3
+        },
+        new DevCompPlan
+        {
+            id = "hard_vanguard_4_artillery_4",
+            name = "双四终局",
+            difficulty = "高难终局",
+            classes = new[] { "Vanguard", "Artillery" },
+            preferredKeys = new[] { "soldier_phalanx", "chariot_tank", "chariot_shock", "chariot_bulwark", "chariot_ram", "cannon_scout", "cannon_missile", "cannon_mortar", "cannon_sniper", "cannon_arc" },
+            rerollBudget = 4
+        },
+    };
+
     // 开发快捷：一键推进一小步，降低手动回归成本。
     private void DevAdvanceOneStep()
     {
@@ -39,9 +92,12 @@ public partial class RoguelikeFramework
         gold = 10;
         playerLevel = 1;
         exp = 0;
-        playerLife = 30;
+        playerLife = 36;
         winStreak = 0;
         loseStreak = 0;
+        lockedCompId = "";
+        lockShop = false;
+        compMilestoneRewarded.Clear();
         selectedHexes.Clear();
         currentRewardOffers.Clear();
         currentHexOffers.Clear();
@@ -108,6 +164,314 @@ public partial class RoguelikeFramework
         Debug.Log(result);
     }
 
+    private void DevRunBalanceIterations(int rounds)
+    {
+        if (rounds < 1) rounds = 1;
+        rounds = Mathf.Clamp(rounds, 1, 200);
+
+        int clear8 = 0;
+        int died = 0;
+        int sumLife = 0;
+        int sumGold = 0;
+        int sumFloor = 0;
+        int easyPick = 0;
+        int hardPick = 0;
+        int ass4Hits = 0;
+        int van4Hits = 0;
+        int art4Hits = 0;
+
+        var planPickStats = new Dictionary<string, int>();
+        foreach (var p in devPlans) planPickStats[p.name] = 0;
+
+        for (int i = 0; i < rounds; i++)
+        {
+            RestartRun();
+            var plan = devPlans[UnityEngine.Random.Range(0, devPlans.Count)];
+            planPickStats[plan.name]++;
+            if (plan.difficulty.Contains("易")) easyPick++; else hardPick++;
+
+            int safety = 400;
+            while (state != RunState.GameOver && safety-- > 0)
+            {
+                switch (state)
+                {
+                    case RunState.Stage:
+                        StartPreparationForCurrentStage();
+                        break;
+                    case RunState.Prepare:
+                        DevAutoBuildBoard(plan);
+                        StartBattle();
+                        DevResolveBattleFast();
+                        break;
+                    case RunState.Reward:
+                        if (currentRewardOffers.Count == 0) RollRewardOffers();
+                        PickReward(DevPickRewardIndex(plan));
+                        break;
+                    case RunState.Hex:
+                        if (currentHexOffers.Count == 0) RollHexOffers();
+                        PickHex(DevPickHexIndex(plan));
+                        break;
+                    case RunState.Battle:
+                        DevResolveBattleFast();
+                        break;
+                }
+            }
+
+            int curFloor = Mathf.Clamp(stageIndex + 1, 1, stages.Count);
+            sumFloor += curFloor;
+            sumLife += playerLife;
+            sumGold += gold;
+
+            int ass = CountClass(deploySlots, "Assassin");
+            int van = CountClass(deploySlots, "Vanguard");
+            int art = CountClass(deploySlots, "Artillery");
+            if (ass >= 4) ass4Hits++;
+            if (van >= 4) van4Hits++;
+            if (art >= 4) art4Hits++;
+
+            if (stageIndex >= stages.Count) clear8++;
+            if (playerLife <= 0) died++;
+        }
+
+        string planStats = "";
+        foreach (var kv in planPickStats) planStats += $"{kv.Key}:{kv.Value} ";
+        battleLog = $"[DEV] 平衡{rounds}轮 | 8关通关:{clear8} | 平均到达关卡:{(sumFloor / (float)rounds):0.00} | 平均生命:{(sumLife / (float)rounds):0.0} | 平均金币:{(sumGold / (float)rounds):0.0} | 易/难:{easyPick}/{hardPick} | 4刺:{ass4Hits} 4先锋:{van4Hits} 4炮:{art4Hits}";
+        string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | {battleLog} | 阵容分布 {planStats}";
+        Debug.Log(line);
+        DevWriteBalanceReport(line, rounds);
+    }
+
+    private void DevWriteBalanceReport(string line, int rounds)
+    {
+        try
+        {
+            string dir = Path.Combine(Application.persistentDataPath, "DevReports");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, $"balance_{rounds}_report.log");
+            File.AppendAllText(path, line + Environment.NewLine);
+        }
+        catch (Exception e)
+        {
+            Debug.Log($"[DEV] 写入平衡报告失败: {e.Message}");
+        }
+    }
+
+    private void DevResolveBattleFast()
+    {
+        if (state != RunState.Battle || !battleStarted) return;
+        int guard = 420;
+        while (state == RunState.Battle && battleStarted && guard-- > 0)
+        {
+            RunOneTurn();
+            CheckBattleEnd();
+        }
+        if (guard <= 0 && state == RunState.Battle)
+        {
+            EndBattle(true);
+            battleLog = "[DEV] 战斗超时，强制结算胜利";
+        }
+    }
+
+    private void DevAutoBuildBoard(DevCompPlan plan)
+    {
+        if (plan == null) return;
+
+        int rerolls = 0;
+        while (rerolls < plan.rerollBudget && gold > 2)
+        {
+            int idx = DevFindBestShopOffer(plan);
+            if (idx >= 0)
+            {
+                BuyOffer(idx);
+            }
+            else
+            {
+                RefreshShop();
+                rerolls++;
+            }
+        }
+
+        // 尝试把当前商店里最匹配的全吃掉，确保“易成型”能快速落地。
+        int loops = 0;
+        while (loops++ < 8)
+        {
+            int idx = DevFindBestShopOffer(plan);
+            if (idx < 0) break;
+            var def = unitDefs[shopOffers[idx]];
+            if (gold < def.cost || benchUnits.Count >= 8) break;
+            BuyOffer(idx);
+        }
+
+        DevRebuildDeployByPlan(plan);
+    }
+
+    private int DevFindBestShopOffer(DevCompPlan plan)
+    {
+        int bestIdx = -1;
+        int bestScore = int.MinValue;
+        for (int i = 0; i < shopOffers.Count; i++)
+        {
+            var def = unitDefs[shopOffers[i]];
+            if (gold < def.cost || benchUnits.Count >= 8) continue;
+            int score = DevScoreDefForPlan(def, plan);
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestIdx = i;
+            }
+        }
+        return bestIdx;
+    }
+
+    private int DevScoreDefForPlan(UnitDef def, DevCompPlan plan)
+    {
+        int score = def.cost * 2 + def.atk + def.hp / 8 + def.spd;
+        for (int i = 0; i < plan.classes.Length; i++)
+        {
+            if (def.classTag == plan.classes[i]) score += 38;
+        }
+        for (int i = 0; i < plan.preferredKeys.Length; i++)
+        {
+            if (def.key == plan.preferredKeys[i]) score += 26;
+        }
+        if (plan.difficulty.Contains("易") && def.cost <= 3) score += 18;
+        if (!plan.difficulty.Contains("易") && def.cost >= 3) score += 12;
+        return score;
+    }
+
+    private void DevRebuildDeployByPlan(DevCompPlan plan)
+    {
+        var all = new List<Unit>();
+        all.AddRange(deploySlots);
+        all.AddRange(benchUnits);
+        if (all.Count == 0) return;
+
+        all.Sort((a, b) =>
+        {
+            int sa = DevScoreUnitForPlan(a, plan);
+            int sb = DevScoreUnitForPlan(b, plan);
+            return sb.CompareTo(sa);
+        });
+
+        int cap = GetBoardCap();
+        var selected = new List<Unit>();
+        for (int i = 0; i < all.Count && selected.Count < cap; i++)
+        {
+            selected.Add(all[i]);
+        }
+
+        deploySlots.Clear();
+        benchUnits.Clear();
+
+        int frontRow = 1;
+        int midRow = 2;
+        int backRow = 3;
+        int fx = 0;
+        int mx = 0;
+        int bx = 0;
+
+        for (int i = 0; i < selected.Count; i++)
+        {
+            var u = selected[i];
+            if (u.ClassTag == "Vanguard")
+            {
+                u.x = Mathf.Clamp(fx++, 0, 4);
+                u.y = frontRow;
+            }
+            else if (u.ClassTag == "Artillery")
+            {
+                u.x = Mathf.Clamp(bx++, 0, 4);
+                u.y = backRow;
+            }
+            else
+            {
+                u.x = Mathf.Clamp(mx++, 0, 4);
+                u.y = midRow;
+            }
+            deploySlots.Add(u);
+        }
+
+        for (int i = selected.Count; i < all.Count && benchUnits.Count < 8; i++)
+        {
+            all[i].x = -1;
+            all[i].y = -1;
+            benchUnits.Add(all[i]);
+        }
+
+        AutoMergeAll();
+        RedrawPrepareBoard();
+    }
+
+    private int DevScoreUnitForPlan(Unit u, DevCompPlan plan)
+    {
+        int score = u.star * 30 + u.atk + u.maxHp / 6 + u.spd + u.def.cost * 4;
+        for (int i = 0; i < plan.classes.Length; i++)
+        {
+            if (u.ClassTag == plan.classes[i]) score += 42;
+        }
+        for (int i = 0; i < plan.preferredKeys.Length; i++)
+        {
+            if (u.def.key == plan.preferredKeys[i]) score += 25;
+        }
+        return score;
+    }
+
+    private int DevPickRewardIndex(DevCompPlan plan)
+    {
+        int idxExp = -1;
+        int idxUnit = -1;
+        int idxGold = -1;
+        for (int i = 0; i < currentRewardOffers.Count; i++)
+        {
+            var id = currentRewardOffers[i].id;
+            if (id == "exp") idxExp = i;
+            if (id == "unit_low") idxUnit = i;
+            if (id == "gold_big") idxGold = i;
+        }
+
+        if (plan.difficulty.Contains("高难") || plan.difficulty.Contains("难"))
+        {
+            if (idxExp >= 0) return idxExp;
+            if (idxUnit >= 0) return idxUnit;
+        }
+        if (idxGold >= 0) return idxGold;
+        return 0;
+    }
+
+    private int DevPickHexIndex(DevCompPlan plan)
+    {
+        int best = 0;
+        int bestScore = int.MinValue;
+        for (int i = 0; i < currentHexOffers.Count; i++)
+        {
+            var h = currentHexOffers[i];
+            int score = 0;
+            if (h.id == "board_plus") score += 30;
+            if (h.id == "fast_train") score += 24;
+            if (h.id == "rich") score += 20;
+            if (h.id == "interest_up") score += 16;
+            if (h.id == "team_atk") score += 14;
+            if (h.id == "healing") score += 10;
+            if (h.id == "cannon_master" && HasPlanClass(plan, "Artillery")) score += 18;
+            if (h.id == "artillery_range" && HasPlanClass(plan, "Artillery")) score += 15;
+            if (h.id == "vanguard_wall" && HasPlanClass(plan, "Vanguard")) score += 15;
+            if (h.id == "rider_charge" && HasPlanClass(plan, "Rider")) score += 15;
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    private bool HasPlanClass(DevCompPlan plan, string cls)
+    {
+        for (int i = 0; i < plan.classes.Length; i++) if (plan.classes[i] == cls) return true;
+        return false;
+    }
+
 
     #region Core Flow
 
@@ -147,6 +511,26 @@ public partial class RoguelikeFramework
         AutoMergeAll();
         RedrawPrepareBoard();
 
+        // 低血保底：每关仅触发一次，避免“完全无操作空间”的挫败。
+        if (playerLife <= 12 && lastEmergencyStage != stageIndex)
+        {
+            lastEmergencyStage = stageIndex;
+            gold += 3;
+            playerLife = Mathf.Min(36, playerLife + 3);
+            if (benchUnits.Count < 8)
+            {
+                string ek = RollShopKeyByLevel();
+                benchUnits.Add(CreateUnit(ek, true));
+                battleLog = $"濒危补给触发：+3金币 +3生命 +1单位({unitDefs[ek].name})";
+                PushEvent("濒危补给触发（低血保底）");
+            }
+            else
+            {
+                battleLog = "濒危补给触发：+3金币 +3生命";
+                PushEvent("濒危补给触发（低血保底）");
+            }
+        }
+
         var st = stages[stageIndex];
         battleLog = $"准备阶段：第{st.floor}关({st.type}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}";
     }
@@ -163,6 +547,18 @@ public partial class RoguelikeFramework
         inspectedUnit = null;
         showTooltip = false;
         battleLog = $"战斗开始：第{st.floor}关 {st.type}";
+        var lc = GetLockedComp();
+        if (lc != null && IsCompActive(lc, deploySlots))
+        {
+            battleLog += $" | 阵容成型加成已激活：{lc.name}";
+            if (!compMilestoneRewarded.Contains(lc.id))
+            {
+                compMilestoneRewarded.Add(lc.id);
+                gold += 3;
+                battleLog += " | 成型里程碑 +3金币";
+                PushEvent($"成型里程碑达成：{lc.name} (+3金币)");
+            }
+        }
 
         playerUnits.Clear();
         enemyUnits.Clear();
@@ -274,14 +670,27 @@ public partial class RoguelikeFramework
 
         if (win)
         {
+            lastBattleWin = true;
             winStreak++;
             loseStreak = 0;
             int reward = 8 + Mathf.Min(5, stages[stageIndex].power);
+            var lc = GetLockedComp();
+            if (lc != null && IsCompActive(lc, deploySlots)) reward += 2;
             gold += reward;
             battleLog = $"胜利！+{reward}金币 | {BuildBattleOutcomeDetail(true)}";
+            lastBattleSummary = $"胜利结算：+{reward}金币";
+            PushEvent($"胜利结算 +{reward} 金币");
+            if (winStreak >= 3 && winStreak % 3 == 0)
+            {
+                gold += 3;
+                battleLog += " | 连胜爆发：额外 +3金币";
+                lastBattleSummary += " | 连胜爆发+3金币";
+                PushEvent("连胜爆发 +3 金币");
+            }
         }
         else
         {
+            lastBattleWin = false;
             loseStreak++;
             winStreak = 0;
             int reward = 4;
@@ -290,6 +699,8 @@ public partial class RoguelikeFramework
             int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power, 2, 12);
             playerLife -= lifeLoss;
             battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss} | {BuildBattleOutcomeDetail(false)}";
+            lastBattleSummary = $"失败结算：保底+{reward}金币，生命-{lifeLoss}";
+            PushEvent($"失败结算 生命-{lifeLoss}");
 
             if (playerLife <= 0)
             {
