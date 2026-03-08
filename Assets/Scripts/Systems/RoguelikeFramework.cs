@@ -1302,6 +1302,22 @@ public partial class RoguelikeFramework : MonoBehaviour
         };
     }
 
+    private string GetOriginEffectDesc(string originTag, int count)
+    {
+        return originTag switch
+        {
+            "Steel" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：本阵营单位减伤 +8% / +16%",
+            "Blaze" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：本阵营单位伤害 +10% / +20%",
+            "Shadow" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：概率爆发伤害",
+            "Thunder" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：本阵营单位速度 +2 / +4",
+            "Night" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：首次爆发伤害增强",
+            "Stone" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：本阵营单位减伤 +6% / +14%",
+            "Wind" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：本阵营单位速度 +2 / +4",
+            "Venom" => $"{GetOriginCn(originTag)}：2/4生效，当前{count}。效果：命中附加额外伤害",
+            _ => $"{GetOriginCn(originTag)}：当前{count}"
+        };
+    }
+
     private string GetUnitsOfClassText(string classTag)
     {
         var names = new List<string>();
@@ -2299,6 +2315,19 @@ public partial class RoguelikeFramework : MonoBehaviour
                 else battleLog = "该备战席格子已有棋子";
             }
         }
+        else
+        {
+            // 体验对齐金铲铲：拖到场外可直接出售
+            if (draggingFromBench && draggingDeploy >= 0 && draggingDeploy < benchUnits.Count)
+            {
+                SellUnit(benchUnits[draggingDeploy]);
+            }
+            else if (!draggingFromBench && draggingDeploy >= 0 && draggingDeploy < deploySlots.Count)
+            {
+                var u = deploySlots[draggingDeploy];
+                if (SellUnit(u)) RedrawPrepareBoard();
+            }
+        }
 
         isDragging = false;
         pendingDrag = false;
@@ -2450,26 +2479,34 @@ public partial class RoguelikeFramework : MonoBehaviour
 
         GUI.Box(new Rect(x, y, w, h), "羁绊面板（点击查看效果/棋子池）");
 
-        // 仿金铲铲：只显示当前场上已有棋子对应的羁绊
+        // 仿金铲铲：显示当前场上可激活的职业/阵营，并支持点击查看详情
         var classes = new List<string>();
+        var origins = new List<string>();
         foreach (var u in team)
         {
             if (string.IsNullOrEmpty(u.ClassTag)) continue;
             if (!classes.Contains(u.ClassTag)) classes.Add(u.ClassTag);
+            if (!string.IsNullOrEmpty(u.OriginTag) && !origins.Contains(u.OriginTag)) origins.Add(u.OriginTag);
         }
-        if (classes.Count == 0) return;
+        if (classes.Count == 0 && origins.Count == 0) return;
 
-        float bx = x + 10;
+        float bx = x + 10f;
+        float by = y + 26f;
+        float cardW = 132f;
+        float cardH = 66f;
+        int cols = Mathf.Max(1, Mathf.FloorToInt((w - 20f) / (cardW + 6f)));
         Vector2 mp = Event.current.mousePosition;
-
-        for (int i = 0; i < classes.Count; i++)
+        int idx = 0;
+        void DrawTraitCard(string key, bool isClass)
         {
-            string cls = classes[i];
-            int c = CountClass(team, cls);
+            int c = isClass ? CountClass(team, key) : CountOrigin(team, key);
             bool active2 = c >= 2;
             bool active4 = c >= 4;
+            int row = idx / cols;
+            int col = idx % cols;
+            idx++;
 
-            Rect card = new Rect(bx + i * 160, y + 24, 150, 74);
+            Rect card = new Rect(bx + col * (cardW + 6f), by + row * (cardH + 6f), cardW, cardH);
 
             Color old = GUI.color;
             Color baseColor;
@@ -2493,10 +2530,11 @@ public partial class RoguelikeFramework : MonoBehaviour
             GUI.DrawTexture(new Rect(card.x + 2, card.y + 2, card.width - 4, card.height - 4), Texture2D.whiteTexture);
             GUI.color = old;
 
+            string title = isClass ? GetClassCn(key) : GetOriginCn(key);
             string status = active4 ? "★★ 4阶激活" : active2 ? "★ 2阶激活" : "未激活";
-            GUI.Label(new Rect(card.x + 8, card.y + 6, card.width - 16, 18), $"{GetClassCn(cls)}");
+            GUI.Label(new Rect(card.x + 8, card.y + 4, card.width - 16, 18), $"{title}");
             GUI.Label(new Rect(card.x + 8, card.y + 24, card.width - 16, 18), $"数量: {c}  (2/4)");
-            GUI.Label(new Rect(card.x + 8, card.y + 42, card.width - 16, 18), $"状态: {status}");
+            GUI.Label(new Rect(card.x + 8, card.y + 42, card.width - 16, 18), status);
 
             if (active2)
             {
@@ -2505,14 +2543,48 @@ public partial class RoguelikeFramework : MonoBehaviour
 
             if (GUI.Button(card, GUIContent.none, GUIStyle.none))
             {
-                selectedSynergyKey = cls;
-                string info = GetSynergyEffectDesc(selectedSynergyKey, c) + "\n" +
-                              $"包含棋子：{GetUnitsOfClassText(selectedSynergyKey)}";
+                selectedSynergyKey = key;
+                string info = isClass
+                    ? GetSynergyEffectDesc(key, c) + "\n包含棋子：" + GetUnitsOfClassText(key)
+                    : GetOriginEffectDesc(key, c) + "\n包含棋子：" + GetUnitsOfOriginText(key);
                 ShowTooltip(info);
             }
+        };
+
+        for (int i = 0; i < classes.Count; i++) DrawTraitCard(classes[i], true);
+        for (int i = 0; i < origins.Count; i++) DrawTraitCard(origins[i], false);
+
+        float legendY = by + Mathf.Ceil(idx / (float)cols) * (cardH + 6f) + 2f;
+        GUI.Label(new Rect(x + 12, legendY, w - 24, 20), "颜色：灰=未激活 蓝=2阶 金=4阶");
+    }
+
+    private void DrawSelectedHexPanel(float x, float y, float w, float h)
+    {
+        GUI.Box(new Rect(x, y, w, h), "");
+        GUI.Label(new Rect(x + 12, y + 6, 220, 20), "已选海克斯（点击查看效果）");
+        if (selectedHexes.Count == 0)
+        {
+            GUI.Label(new Rect(x + 12, y + 30, w - 24, 24), "暂无");
+            return;
         }
 
-        GUI.Label(new Rect(x + 12, y + 102, w - 24, 20), "颜色说明：灰=未激活，蓝=2阶激活，金=4阶激活（战斗中死亡也会保留羁绊）");
+        float chipW = 132f;
+        float chipH = 30f;
+        int cols = Mathf.Max(1, Mathf.FloorToInt((w - 24f) / (chipW + 8f)));
+        for (int i = 0; i < selectedHexes.Count; i++)
+        {
+            var hx = selectedHexes[i];
+            int row = i / cols;
+            int col = i % cols;
+            float bx = x + 12f + col * (chipW + 8f);
+            float by = y + 30f + row * (chipH + 6f);
+            string txt = hx.name;
+            if (GUI.Button(new Rect(bx, by, chipW, chipH), txt))
+            {
+                ShowTooltip($"{hx.name} [{hx.rarity}]\n{hx.desc}");
+                battleLog = $"查看海克斯：{hx.name}";
+            }
+        }
     }
 
     private void DrawCompPanel(float x, float y, float w, float h, List<Unit> team)
@@ -2839,10 +2911,7 @@ public partial class RoguelikeFramework : MonoBehaviour
             }
         }
 
-        GUI.Box(new Rect(centerX, 116, centerW, 92), "");
-        GUI.Label(new Rect(centerX + 12, 122, 180, 20), "已选海克斯");
-        string hexTxt = selectedHexes.Count == 0 ? "暂无" : string.Join(" | ", selectedHexes.ConvertAll(h => h.name));
-        GUI.Label(new Rect(centerX + 12, 144, centerW - 24, 54), hexTxt, wrapLabelStyle);
+        DrawSelectedHexPanel(centerX, 116, centerW, 104);
 
         if (state == RunState.Stage)
         {
@@ -2891,6 +2960,8 @@ public partial class RoguelikeFramework : MonoBehaviour
                     {
                         GUI.color = new Color(0.12f, 0.78f, 1f, 0.46f);
                         GUI.DrawTexture(cell, Texture2D.whiteTexture);
+                        GUI.color = new Color(1f, 0.95f, 0.65f, 0.98f);
+                        GUI.Label(new Rect(cell.x + 4, cell.y + 2, 26, 18), $"{placed.star}★");
                     }
                     GUI.color = old;
                 }
@@ -2978,8 +3049,8 @@ public partial class RoguelikeFramework : MonoBehaviour
                 }
             }
 
-            DrawSynergyClickPanel(rightX, 220, rightW, 126, deploySlots);
-            DrawCompPanel(rightX, 352, rightW, 230, deploySlots);
+            DrawSynergyClickPanel(rightX, 220, rightW, 230, deploySlots);
+            DrawCompPanel(rightX, 456, rightW, 230, deploySlots);
         }
 
         if (state == RunState.Battle)
@@ -3004,6 +3075,13 @@ public partial class RoguelikeFramework : MonoBehaviour
             }
 
             DrawSynergyClickPanel(16, 470, leftW, 120, playerUnits);
+            for (int i = 0; i < playerUnits.Count; i++)
+            {
+                var u = playerUnits[i];
+                if (!u.Alive) continue;
+                Rect cell = GetBoardCellGuiRect(u.x, u.y);
+                GUI.Label(new Rect(cell.x + 4, cell.y + 2, 26, 18), $"{u.star}★");
+            }
 
             if (showBattleStats)
             {
