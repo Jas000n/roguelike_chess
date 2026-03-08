@@ -50,8 +50,26 @@ public partial class RoguelikeFramework
             name = "双四终局",
             difficulty = "高难终局",
             classes = new[] { "Vanguard", "Artillery" },
-            preferredKeys = new[] { "soldier_phalanx", "chariot_tank", "chariot_shock", "chariot_bulwark", "chariot_ram", "cannon_scout", "cannon_missile", "cannon_mortar", "cannon_sniper", "cannon_arc" },
+            preferredKeys = new[] { "soldier_phalanx", "soldier_guard", "chariot_tank", "chariot_shock", "chariot_bulwark", "chariot_ram", "cannon_scout", "cannon_missile", "cannon_mortar", "cannon_sniper", "cannon_arc" },
             rerollBudget = 4
+        },
+        new DevCompPlan
+        {
+            id = "mid_poison_cut",
+            name = "毒影斩首",
+            difficulty = "中等",
+            classes = new[] { "Assassin", "Artillery" },
+            preferredKeys = new[] { "guard_assassin", "guard_blade", "guard_poison", "guard_mirror", "cannon_burst", "cannon_arc", "cannon_sniper" },
+            rerollBudget = 2
+        },
+        new DevCompPlan
+        {
+            id = "easy_steel_rider_wall",
+            name = "钢骑壁垒",
+            difficulty = "易成型",
+            classes = new[] { "Vanguard", "Rider" },
+            preferredKeys = new[] { "soldier_guard", "soldier_phalanx", "chariot_tank", "horse_raider", "horse_lancer", "horse_banner" },
+            rerollBudget = 1
         },
     };
 
@@ -95,6 +113,7 @@ public partial class RoguelikeFramework
         playerLife = 36;
         winStreak = 0;
         loseStreak = 0;
+        rewardBoardCapBonus = 0;
         lockedCompId = "";
         lockShop = false;
         compMilestoneRewarded.Clear();
@@ -424,9 +443,9 @@ public partial class RoguelikeFramework
         for (int i = 0; i < currentRewardOffers.Count; i++)
         {
             var id = currentRewardOffers[i].id;
-            if (id == "exp") idxExp = i;
-            if (id == "unit_low") idxUnit = i;
-            if (id == "gold_big") idxGold = i;
+            if (id == "exp" || id == "exp_big") idxExp = i;
+            if (id == "unit_low" || id == "unit_mid" || id == "duo_pack") idxUnit = i;
+            if (id == "gold_big" || id == "gold_huge") idxGold = i;
         }
 
         if (plan.difficulty.Contains("高难") || plan.difficulty.Contains("难"))
@@ -452,10 +471,22 @@ public partial class RoguelikeFramework
             if (h.id == "interest_up") score += 16;
             if (h.id == "team_atk") score += 14;
             if (h.id == "healing") score += 10;
+            if (h.id == "lifesteal_core") score += 15;
+            if (h.id == "execution_edge") score += 12;
+            if (h.id == "reroll_engine") score += 28;
+            if (h.id == "triple_prep") score += 24;
+            if (h.id == "vanguard_bastion" && HasPlanClass(plan, "Vanguard")) score += 20;
+            if (h.id == "artillery_overclock" && HasPlanClass(plan, "Artillery")) score += 22;
+            if (h.id == "rider_relay" && HasPlanClass(plan, "Rider")) score += 18;
+            if (h.id == "stone_oath") score += 16;
+            if (h.id == "venom_payload") score += 18;
+            if (h.id == "windwalk") score += 16;
+            if (h.id == "assassin_contract" && HasPlanClass(plan, "Assassin")) score += 24;
             if (h.id == "cannon_master" && HasPlanClass(plan, "Artillery")) score += 18;
             if (h.id == "artillery_range" && HasPlanClass(plan, "Artillery")) score += 15;
             if (h.id == "vanguard_wall" && HasPlanClass(plan, "Vanguard")) score += 15;
             if (h.id == "rider_charge" && HasPlanClass(plan, "Rider")) score += 15;
+            if (h.id == "assassin_bloom" && HasPlanClass(plan, "Assassin")) score += 20;
 
             if (score > bestScore)
             {
@@ -495,6 +526,8 @@ public partial class RoguelikeFramework
         int hexBonus = HasHex("rich") ? 4 : 0;
 
         gold += roundBaseGold + streakGold + interest + hexBonus;
+        rerollEngineFreeUses = HasHex("reroll_engine") ? 2 : 0;
+        if (HasHex("reroll_engine")) gold += 1;
 
         int expGain = 2 + (HasHex("fast_train") ? 2 : 0);
         GainExp(expGain);
@@ -532,7 +565,8 @@ public partial class RoguelikeFramework
         }
 
         var st = stages[stageIndex];
-        battleLog = $"准备阶段：第{st.floor}关({st.type}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}";
+        battleLog = $"准备阶段：第{st.floor}关({st.type}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}" +
+                    (HasHex("reroll_engine") ? " | 精密改造：本回合2次免费刷新" : "");
     }
 
     private void StartBattle()
@@ -589,6 +623,42 @@ public partial class RoguelikeFramework
                 u.y = Mathf.Clamp(u.y, 0, H - 1);
             }
             playerUnits.Add(u);
+        }
+
+        if (HasHex("vanguard_bastion"))
+        {
+            for (int i = 0; i < playerUnits.Count; i++)
+            {
+                var u = playerUnits[i];
+                if (u.ClassTag != "Vanguard") continue;
+                int bonus = Mathf.RoundToInt(u.maxHp * 0.18f);
+                u.maxHp += bonus;
+                u.hp += bonus;
+            }
+        }
+        if (HasHex("stone_oath"))
+        {
+            for (int i = 0; i < playerUnits.Count; i++)
+            {
+                var u = playerUnits[i];
+                if (u.OriginTag != "Stone") continue;
+                int bonus = Mathf.RoundToInt(u.maxHp * 0.14f);
+                u.maxHp += bonus;
+                u.hp += bonus;
+            }
+        }
+        if (HasHex("triple_prep"))
+        {
+            int maxStar = 1;
+            for (int i = 0; i < playerUnits.Count; i++) maxStar = Mathf.Max(maxStar, playerUnits[i].star);
+            for (int i = 0; i < playerUnits.Count; i++)
+            {
+                var u = playerUnits[i];
+                if (u.star < maxStar) continue;
+                u.maxHp = Mathf.RoundToInt(u.maxHp * 1.12f);
+                u.hp = Mathf.Min(u.maxHp, Mathf.RoundToInt(u.hp * 1.12f));
+                u.atk = Mathf.RoundToInt(u.atk * 1.10f);
+            }
         }
 
         SpawnEnemiesForStage(st);
