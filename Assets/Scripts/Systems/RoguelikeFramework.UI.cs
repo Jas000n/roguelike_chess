@@ -554,7 +554,11 @@ public partial class RoguelikeFramework
         string traitText = compact ? $"{cls}/{GetOriginCn(def.originTag)}" : $"{GetClassCn(def.classTag)} / {GetOriginCn(def.originTag)}";
         GUI.Label(new Rect(tx, r.y + 2, tw, 16), Cut(def.name, compact ? 4 : 8), chipTitleStyle);
         GUI.Label(new Rect(tx, r.y + 19, tw, 14), Cut(traitText, compact ? 8 : 14), chipMetaStyle);
-        GUI.Label(new Rect(tx, r.y + 34, 70, 14), $"{star}★", chipMetaStyle);
+        // 强化星级视觉 (Stage B1)
+        Color starColor = star == 3 ? new Color(1f, 0.82f, 0.2f) : (star == 2 ? new Color(0.6f, 0.8f, 1f) : new Color(0.86f, 0.93f, 1f));
+        GUI.color = starColor;
+        string starStr = star == 3 ? "★★★" : (star == 2 ? "★★" : "★");
+        GUI.Label(new Rect(tx, r.y + 34, 70, 14), starStr, chipMetaStyle);
         if (showCost) GUI.Label(new Rect(r.x + r.width - 44, r.y + 34, 40, 14), $"{cost}金", chipMetaStyle);
         GUI.color = old;
     }
