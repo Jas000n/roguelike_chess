@@ -211,3 +211,7 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ## 2026-03-09 18:04 EST
 ### Done
 - 推进 Stage B4 (关卡节奏曲线重做)：将原来短促的 8 关流扩展成 12 关的平稳阶梯曲线（含两个 Shop/强化房，更多小幅度战力抬升阶段），以便匹配新的扣血惩罚和单位构筑成型速度。
+
+## 2026-03-09 19:04 EST
+### Done
+- 推进 Stage B1 (星级提升表现)：修改 UI 层 `DrawUnitChipCard`，为 1/2/3 星赋予独立颜色与长短标识区分（★/★★/★★★，对应 白/蓝/金），强化局内的直观合成反馈。
