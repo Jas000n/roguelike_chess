@@ -70,15 +70,21 @@ public partial class RoguelikeFramework
     private void BuildLinearStages()
     {
         stages.Clear();
-        stages.Add(new StageNode { floor = 1, type = StageType.Normal, power = 1, giveHex = false });
-        stages.Add(new StageNode { floor = 2, type = StageType.Normal, power = 2, giveHex = true });
-        stages.Add(new StageNode { floor = 3, type = StageType.Elite, power = 3, giveHex = false });
-        stages.Add(new StageNode { floor = 4, type = StageType.Shop, power = 3, giveHex = true });
-        stages.Add(new StageNode { floor = 5, type = StageType.Normal, power = 4, giveHex = false });
-        stages.Add(new StageNode { floor = 6, type = StageType.Elite, power = 4, giveHex = true });
-        stages.Add(new StageNode { floor = 7, type = StageType.Normal, power = 5, giveHex = false });
-        stages.Add(new StageNode { floor = 8, type = StageType.Boss, power = 5, giveHex = true });
+        // 扩展为 12 关的平滑节奏曲线 (Stage B4 节奏重做)
+        stages.Add(new StageNode { floor = 1,  type = StageType.Normal, power = 1, giveHex = true });
+        stages.Add(new StageNode { floor = 2,  type = StageType.Normal, power = 2, giveHex = false });
+        stages.Add(new StageNode { floor = 3,  type = StageType.Elite,  power = 3, giveHex = true });
+        stages.Add(new StageNode { floor = 4,  type = StageType.Normal, power = 3, giveHex = false });
+        stages.Add(new StageNode { floor = 5,  type = StageType.Shop,   power = 3, giveHex = false });
+        stages.Add(new StageNode { floor = 6,  type = StageType.Normal, power = 4, giveHex = false });
+        stages.Add(new StageNode { floor = 7,  type = StageType.Elite,  power = 5, giveHex = true });
+        stages.Add(new StageNode { floor = 8,  type = StageType.Normal, power = 5, giveHex = false });
+        stages.Add(new StageNode { floor = 9,  type = StageType.Shop,   power = 6, giveHex = false });
+        stages.Add(new StageNode { floor = 10, type = StageType.Normal, power = 6, giveHex = false });
+        stages.Add(new StageNode { floor = 11, type = StageType.Elite,  power = 7, giveHex = true });
+        stages.Add(new StageNode { floor = 12, type = StageType.Boss,   power = 8, giveHex = true });
     }
+
 
     private void BuildCompDefs()
     {
