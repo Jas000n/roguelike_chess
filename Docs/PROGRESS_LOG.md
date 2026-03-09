@@ -176,3 +176,20 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 1. 为 `ui_playtest_regression.sh` 增加 screenshot capability 检测与降级（无 `screencapture` 时仅记录步骤日志，不中断）。
 2. 在可运行环境重新执行关键链路回归，确认状态机闭环（Stage/Prepare/Battle/Reward/Hex）。
 3. 继续 Stage A1：优先拆 `Units/Shop/Economy` 区域到独立 partial。
+
+## 2026-03-09 12:28 EST
+### Done
+- 继续执行 Stage A1 (拆分主脚本)：将 `RoguelikeFramework.cs` 中的 `Units / Shop / Economy`、`Battle`、`GUI`、`Input`、`Setup Data` 等关键区域分别抽离到对应的 partial 文件中。
+- `ui_playtest_regression.sh` 自适应了无截图环境（降级为跳过截屏并记录跳过日志），从而能够不中断流程完整跑完脚本步骤。
+
+### Verify
+- 手动回归了 `ui_playtest_regression.sh` 流程，日志显示其能够正常步进至 `prepare final snapshot`（尽管未能真正截图），说明 UI 交互指令能够正常发射。
+- 静态检查代码确保 C# partial 类分割边界无语法残漏。
+
+### Found / Risks
+- `RoguelikeFramework.cs` 文件瘦身明显，但依赖关系还属于强耦合的单例，下一步 (Stage A2) 需整理外部数据与表现层的分离接口。
+
+### Next
+1. 考虑引入无头/单元测试式的状态机全流程测试（快速验证回合推进逻辑）。
+2. 在真机上再进行一次构建（或者无头模式跑一遍），以确保刚拆解后的编译通过性并确认玩法表现在新架构下全绿。
+
