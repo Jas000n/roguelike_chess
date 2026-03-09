@@ -901,7 +901,8 @@ public partial class RoguelikeFramework
             int reward = 4;
             gold += reward;
 
-            int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power, 2, 12);
+            int enemySurvivors = enemyUnits.FindAll(u => u.Alive).Count;
+            int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power + (enemySurvivors * 2), 2, 25);
             playerLife -= lifeLoss;
             battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss} | {BuildBattleOutcomeDetail(false)}";
             lastBattleSummary = $"失败结算：保底+{reward}金币，生命-{lifeLoss}";

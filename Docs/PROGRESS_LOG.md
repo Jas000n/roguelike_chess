@@ -203,3 +203,7 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 聚焦 Stage B1: 完善 1→2→3 升星链（当前代码已有基本合成，进一步丰富星级视觉/特效回调等外挂接口）。
 2. 核对 B2 (玩家生命值与失败惩罚)，检查当前每次失败的固定扣血是否足够拉出体验节奏，考虑按剩余兵力算伤害（如金铲铲逻辑）。
+
+## 2026-03-09 17:34 EST
+### Done
+- 推进 Stage B2：修改失败惩罚。原逻辑是固定扣除 `2 + stages[stageIndex].power`（最高12）。新逻辑引入 `enemySurvivors * 2` 计算存活敌人造成的额外生命值扣除，类似于金铲铲未清场惩罚机制，增加失败方生命压力，更拉开强度差距（上限放宽到 25 且随场上剩余兵力增多而变重）。
