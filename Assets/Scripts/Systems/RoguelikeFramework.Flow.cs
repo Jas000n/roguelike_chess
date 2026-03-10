@@ -129,11 +129,8 @@ public partial class RoguelikeFramework
         currentRewardOffers.Clear();
         currentHexOffers.Clear();
         pendingHexAfterReward = false;
-        benchUnits.Clear();
         deploySlots.Clear();
-        benchUnits.Add(CreateUnit("soldier_sword", true));
-        benchUnits.Add(CreateUnit("horse_raider", true));
-        benchUnits.Add(CreateUnit("cannon_burst", true));
+        FillRandomOpeningBench();
         state = RunState.Stage;
         battleLog = "新一轮开始：请选择地图路线";
         RedrawPrepareBoard();

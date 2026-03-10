@@ -134,13 +134,9 @@ public partial class RoguelikeFramework : MonoBehaviour
         LoadGeneratedUnitArt();
         LoadGeneratedHexArt();
         RefreshShop(true);
+        FillRandomOpeningBench();
 
-        // 初始阵容
-        benchUnits.Add(CreateUnit("soldier_sword", true));
-        benchUnits.Add(CreateUnit("horse_raider", true));
-        benchUnits.Add(CreateUnit("cannon_burst", true));
-
-        battleLog = "M1/M2/M3 框架已接入：线性关卡 + 海克斯 + 羁绊 + 经济";
+        battleLog = "新一轮已生成：分支地图 + 随机起手 + 海克斯 + 羁绊 + 经济";
     }
 
     private void Update()

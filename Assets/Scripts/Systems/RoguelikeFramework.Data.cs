@@ -105,43 +105,52 @@ public partial class RoguelikeFramework
         StageType[,] layout =
         {
             { StageType.Normal,   StageType.Normal,   StageType.Normal   },
+            { StageType.Shop,     StageType.Normal,   StageType.Treasure },
+            { StageType.Normal,   StageType.Mystery,  StageType.Normal   },
+            { StageType.Shop,     StageType.Normal,   StageType.Shop     },
+            { StageType.Normal,   StageType.Normal,   StageType.Treasure },
+            { StageType.Mystery,  StageType.Shop,     StageType.Normal   },
+            { StageType.Normal,   StageType.Elite,    StageType.Normal   },
             { StageType.Shop,     StageType.Normal,   StageType.Mystery  },
             { StageType.Elite,    StageType.Normal,   StageType.Treasure },
-            { StageType.Normal,   StageType.Shop,     StageType.Normal   },
-            { StageType.Mystery,  StageType.Normal,   StageType.Elite    },
-            { StageType.Shop,     StageType.Normal,   StageType.Mystery  },
-            { StageType.Elite,    StageType.Treasure, StageType.Normal   },
-            { StageType.Normal,   StageType.Shop,     StageType.Mystery  },
-            { StageType.Treasure, StageType.Elite,    StageType.Normal   }
+            { StageType.Normal,   StageType.Shop,     StageType.Elite    },
+            { StageType.Mystery,  StageType.Normal,   StageType.Normal   },
+            { StageType.Treasure, StageType.Elite,    StageType.Shop     }
         };
 
         int[,] power =
         {
             { 1, 1, 1 },
-            { 1, 2, 2 },
+            { 1, 1, 0 },
+            { 2, 2, 2 },
+            { 1, 2, 1 },
             { 3, 3, 0 },
-            { 4, 1, 4 },
-            { 5, 5, 5 },
-            { 1, 6, 6 },
-            { 6, 0, 7 },
-            { 7, 1, 7 },
-            { 0, 8, 8 }
+            { 3, 1, 3 },
+            { 4, 5, 4 },
+            { 1, 4, 4 },
+            { 6, 5, 0 },
+            { 5, 1, 6 },
+            { 6, 6, 6 },
+            { 0, 7, 1 }
         };
 
         bool[,] giveHex =
         {
             { false, false, false },
             { false, false, false },
-            { true,  false, false },
             { false, false, false },
+            { false, false, false },
+            { false, true,  false },
+            { false, false, false },
+            { false, true,  false },
+            { false, false, false },
+            { true,  false, false },
             { false, false, true  },
             { false, true,  false },
-            { true,  false, false },
-            { false, false, false },
             { false, true,  false }
         };
 
-        for (int floor = 1; floor <= 9; floor++)
+        for (int floor = 1; floor <= 12; floor++)
         {
             for (int lane = 0; lane < 3; lane++)
             {
@@ -149,9 +158,9 @@ public partial class RoguelikeFramework
             }
         }
 
-        AddStage("f10_boss", 10, 1, StageType.Boss, 10, true);
+        AddStage("f13_boss", 13, 1, StageType.Boss, 9, true);
 
-        for (int floor = 1; floor < 9; floor++)
+        for (int floor = 1; floor < 12; floor++)
         {
             for (int lane = 0; lane < 3; lane++)
             {
@@ -160,17 +169,18 @@ public partial class RoguelikeFramework
         }
 
         // 少量跨线，制造路线选择，但不做全互联
-        Link("f2_0", "f3_1");
-        Link("f3_2", "f4_1");
-        Link("f4_1", "f5_2");
-        Link("f5_0", "f6_1");
-        Link("f6_2", "f7_1");
-        Link("f7_1", "f8_0");
-        Link("f8_1", "f9_2");
+        Link("f3_0", "f4_1");
+        Link("f4_2", "f5_1");
+        Link("f5_1", "f6_2");
+        Link("f6_0", "f7_1");
+        Link("f8_2", "f9_1");
+        Link("f9_0", "f10_1");
+        Link("f10_1", "f11_2");
+        Link("f11_0", "f12_1");
 
-        Link("f9_0", "f10_boss");
-        Link("f9_1", "f10_boss");
-        Link("f9_2", "f10_boss");
+        Link("f12_0", "f13_boss");
+        Link("f12_1", "f13_boss");
+        Link("f12_2", "f13_boss");
 
         availableStageNodeIds.Add("f1_0");
         availableStageNodeIds.Add("f1_1");

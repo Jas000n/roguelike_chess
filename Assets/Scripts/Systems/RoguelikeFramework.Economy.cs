@@ -25,6 +25,58 @@ public partial class RoguelikeFramework
         };
     }
 
+    private string RollOpeningUnitKey()
+    {
+        var pool = new List<UnitDef>();
+        foreach (var kv in unitDefs)
+        {
+            if (kv.Value.cost >= 1 && kv.Value.cost <= 3) pool.Add(kv.Value);
+        }
+        if (pool.Count == 0) return RollShopKeyByLevel();
+
+        float total = 0f;
+        var weights = new float[pool.Count];
+        for (int i = 0; i < pool.Count; i++)
+        {
+            float w = pool[i].cost switch
+            {
+                1 => 1.15f,
+                2 => 1.0f,
+                3 => 0.7f,
+                _ => 0.2f
+            };
+            weights[i] = w;
+            total += w;
+        }
+
+        float roll = UnityEngine.Random.Range(0f, total);
+        float acc = 0f;
+        for (int i = 0; i < pool.Count; i++)
+        {
+            acc += weights[i];
+            if (roll <= acc) return pool[i].key;
+        }
+        return pool[pool.Count - 1].key;
+    }
+
+    private void FillRandomOpeningBench()
+    {
+        benchUnits.Clear();
+        var picked = new HashSet<string>();
+        int safety = 24;
+        while (benchUnits.Count < 3 && safety-- > 0)
+        {
+            string key = RollOpeningUnitKey();
+            if (!picked.Add(key)) continue;
+            benchUnits.Add(CreateUnit(key, true));
+        }
+
+        while (benchUnits.Count < 3)
+        {
+            benchUnits.Add(CreateUnit(RollOpeningUnitKey(), true));
+        }
+    }
+
     private Unit CloneUnit(Unit src)
     {
         return new Unit
