@@ -514,12 +514,12 @@ public partial class RoguelikeFramework
         chipTitleStyle.fontSize = 14;
         chipTitleStyle.fontStyle = FontStyle.Bold;
         chipTitleStyle.wordWrap = false;
-        chipTitleStyle.clipping = TextClipping.Clip;
+        chipTitleStyle.clipping = TextClipping.Overflow;
 
         chipMetaStyle.normal.textColor = new Color(0.86f, 0.93f, 1f);
-        chipMetaStyle.fontSize = 12;
+        chipMetaStyle.fontSize = 11;
         chipMetaStyle.wordWrap = false;
-        chipMetaStyle.clipping = TextClipping.Clip;
+        chipMetaStyle.clipping = TextClipping.Overflow;
 
         stylesReady = true;
     }
@@ -527,12 +527,7 @@ public partial class RoguelikeFramework
     private void DrawUnitChipCard(Rect r, UnitDef def, int star, int cost, bool showCost)
     {
         if (def == null) return;
-        bool compact = r.width <= 118f;
-        string Cut(string text, int maxLen)
-        {
-            if (string.IsNullOrEmpty(text) || text.Length <= maxLen) return text;
-            return text.Substring(0, Mathf.Max(1, maxLen - 1)) + "…";
-        }
+        bool compact = r.width <= 138f;
         Color old = GUI.color;
         GUI.color = GetUnitChipColorByClass(def.classTag);
         GUI.DrawTexture(r, Texture2D.whiteTexture);
@@ -540,29 +535,30 @@ public partial class RoguelikeFramework
         GUI.DrawTexture(new Rect(r.x + 2, r.y + 2, r.width - 4, r.height - 4), Texture2D.whiteTexture);
 
         var icon = PickIcon(def);
-        float iconW = compact ? 36f : 44f;
+        float iconW = compact ? 40f : 48f;
         GUI.color = new Color(0.15f, 0.22f, 0.34f, 0.95f);
-        GUI.DrawTexture(new Rect(r.x + 6, r.y + 7, iconW, iconW), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x + 8, r.y + 8, iconW, iconW), Texture2D.whiteTexture);
         GUI.color = Color.white;
-        if (icon != null) GUI.DrawTexture(new Rect(r.x + 6, r.y + 7, iconW, iconW), icon, ScaleMode.ScaleToFit, true);
-        else GUI.Label(new Rect(r.x + 10, r.y + 18, iconW - 6, 18), "?", chipTitleStyle);
+        if (icon != null) GUI.DrawTexture(new Rect(r.x + 8, r.y + 8, iconW, iconW), icon, ScaleMode.ScaleToFit, true);
+        else GUI.Label(new Rect(r.x + 12, r.y + 18, iconW - 6, 18), "?", chipTitleStyle);
 
         GUI.color = Color.white;
-        float tx = compact ? r.x + 48f : r.x + 58f;
-        float tw = r.width - (compact ? 54f : 64f);
-        string cls = GetClassCn(def.classTag).Replace("钢铁", "").Replace("机动", "").Replace("火力", "").Replace("暗影", "");
-        string traitText = compact ? $"{cls}/{GetOriginCn(def.originTag)}" : $"{GetClassCn(def.classTag)} / {GetOriginCn(def.originTag)}";
-        GUI.Label(new Rect(tx, r.y + 6, tw, 18), Cut(def.name, compact ? 6 : 10), chipTitleStyle);
-        GUI.Label(new Rect(tx, r.y + 26, tw, 16), Cut(traitText, compact ? 10 : 18), chipMetaStyle);
+        float tx = r.x + iconW + 16f;
+        float tw = r.width - iconW - 24f;
+        string classText = GetClassCn(def.classTag);
+        string originText = GetOriginCn(def.originTag);
+        GUI.Label(new Rect(tx, r.y + 6, tw, 18), def.name, chipTitleStyle);
+        GUI.Label(new Rect(tx, r.y + 24, tw, 14), classText, chipMetaStyle);
+        GUI.Label(new Rect(tx, r.y + 39, tw, 14), originText, chipMetaStyle);
         // 强化星级视觉 (Stage B1)
         Color starColor = star == 3 ? new Color(1f, 0.82f, 0.2f) : (star == 2 ? new Color(0.6f, 0.8f, 1f) : new Color(0.86f, 0.93f, 1f));
         GUI.color = starColor;
         string starStr = star == 3 ? "★★★" : (star == 2 ? "★★" : "★");
-        GUI.Label(new Rect(tx, r.y + 46, 70, 16), starStr, chipMetaStyle);
+        GUI.Label(new Rect(tx, r.y + r.height - 18f, 70, 16), starStr, chipMetaStyle);
         if (showCost)
         {
             GUI.color = new Color(1f, 0.86f, 0.38f, 1f);
-            GUI.Label(new Rect(r.x + r.width - 52, r.y + 46, 46, 16), $"{cost}金", chipMetaStyle);
+            GUI.Label(new Rect(r.x + r.width - 48, r.y + r.height - 18f, 42, 16), $"{cost}金", chipMetaStyle);
         }
         GUI.color = old;
     }
@@ -719,9 +715,9 @@ public partial class RoguelikeFramework
             }
 
             float panelX = 16f;
-            float panelY = guiH - 286f;
+            float panelY = guiH - 312f;
             float panelW = guiW - 32f;
-            float panelH = 270f;
+            float panelH = 296f;
             GUI.Box(new Rect(panelX, panelY, panelW, panelH), "准备阶段");
 
             float opsW = compact ? 430f : 500f;
@@ -729,10 +725,10 @@ public partial class RoguelikeFramework
             float shopGapX = 10f;
             int shopCols = 5;
             float shopW = (shopAreaW - (shopCols - 1) * shopGapX) / shopCols;
-            float shopH = 86f;
+            float shopH = 96f;
             float benchGap = 10f;
             float benchW = (panelW - 32f - 7f * benchGap) / 8f;
-            float benchH = 92f;
+            float benchH = 102f;
 
             GUI.Label(new Rect(panelX + 14, panelY + 8, 150, 28), $"<size=21><b>金币 {gold}</b></size>", hudStatStyle);
             GUI.Label(new Rect(panelX + 170, panelY + 8, 180, 28), $"<size=21><b>经验 {exp}/{ExpNeed(playerLevel)}</b></size>", hudStatStyle);
@@ -759,7 +755,7 @@ public partial class RoguelikeFramework
             {
                 var d = unitDefs[shopOffers[i]];
                 int col = i % shopCols;
-                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 66, shopW, shopH);
+                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 62, shopW, shopH);
                 if (CountOwnedCopies(d.key) > 0)
                 {
                     float pulse = 0.45f + 0.55f * Mathf.PingPong(Time.realtimeSinceStartup * 2.2f, 1f);
@@ -775,14 +771,14 @@ public partial class RoguelikeFramework
                 }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) BuyOffer(i);
             }
-            GUI.Label(new Rect(panelX + 16, panelY + 164, 120, 20), "备战席");
+            GUI.Label(new Rect(panelX + 16, panelY + 172, 120, 20), "备战席");
             for (int i = 0; i < 8; i++)
             {
                 float bx = panelX + 16 + i * (benchW + benchGap);
                 if (i < benchUnits.Count)
                 {
                     var u = benchUnits[i];
-                    Rect r = new Rect(bx, panelY + 186, benchW, benchH);
+                    Rect r = new Rect(bx, panelY + 194, benchW, benchH);
                     DrawUnitChipCard(r, u.def, u.star, u.def.cost, false);
                     if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                     {
@@ -791,7 +787,7 @@ public partial class RoguelikeFramework
                         battleLog = $"查看 {u.Name}";
                     }
                 }
-                else GUI.Box(new Rect(bx, panelY + 186, benchW, benchH), "");
+                else GUI.Box(new Rect(bx, panelY + 194, benchW, benchH), "");
             }
 
             if (inspectedUnit != null)

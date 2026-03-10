@@ -419,12 +419,12 @@ public partial class RoguelikeFramework
                 battleLog = "奖励：获得双人补给";
                 break;
             case "free_reroll_3":
-                // TODO: Add freeRerollTurns state variable
+                freeRerollTurns = 3;
                 battleLog = "奖励：未来3回合首次刷新免费 (系统待接入)";
                 break;
             case "gold_interest":
                 gold += 10;
-                // TODO: Add interestCapModifier state
+                interestCapModifier -= 1;
                 battleLog = "奖励：对赌协议 +10金币 (上限惩罚待接入)";
                 break;
             case "exp_burst":

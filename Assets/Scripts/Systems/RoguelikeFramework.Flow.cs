@@ -108,6 +108,8 @@ public partial class RoguelikeFramework
     {
         stageIndex = 0;
         gold = 10;
+        freeRerollTurns = 0;
+        interestCapModifier = 0;
         playerLevel = 1;
         exp = 0;
         playerLife = 36;

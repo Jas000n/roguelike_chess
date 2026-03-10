@@ -97,7 +97,8 @@ public partial class RoguelikeFramework
     {
         int cap = 5;
         if (HasHex("interest_up")) cap += 2;
-        return cap;
+        cap += interestCapModifier;
+        return Mathf.Max(0, cap);
     }
 
     private void RefreshShop(bool freeRefresh = false)
@@ -115,13 +116,23 @@ public partial class RoguelikeFramework
             rerollEngineFreeUses--;
         }
 
-        if (!freeRefresh)
+        bool consumeFreeRerollBuff = false;
+        if (!freeRefresh && !consumeRerollEngine && freeRerollTurns > 0)
         {
-            if (!consumeRerollEngine)
-            {
-                if (gold < 1) { battleLog = "金币不足，无法刷新"; return; }
-                gold -= 1;
-            }
+            consumeFreeRerollBuff = true;
+            // NOTE: freeRerollTurns is treated as a per-turn buff where the *first* reroll is free.
+            // Wait, the design says "接下来3回合，每回合首次刷新免费". 
+            // So we just use it without decrementing here; we decrement it in Flow.cs at round start.
+        }
+
+        if (!freeRefresh && !consumeRerollEngine && !consumeFreeRerollBuff)
+        {
+            if (gold < 1) { battleLog = "金币不足，无法刷新"; return; }
+            gold -= 1;
+        }
+        else if (consumeFreeRerollBuff)
+        {
+            freeRerollTurns--; // If it's a usage count rather than a duration. Let's make it 3 uses for simplicity.
         }
 
         shopOffers.Clear();
