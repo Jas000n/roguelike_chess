@@ -179,8 +179,8 @@ public partial class RoguelikeFramework
 
         if (!freeRefresh && !consumeRerollEngine && !consumeFreeRerollBuff)
         {
-            if (gold < 1) { battleLog = "金币不足，无法刷新"; return; }
-            gold -= 1;
+            if (gold < 2) { battleLog = "金币不足，无法刷新"; return; }
+            gold -= 2;
         }
         else if (consumeFreeRerollBuff)
         {
@@ -222,6 +222,7 @@ public partial class RoguelikeFramework
         {
             var d = kv.Value;
             if (d.cost > Mathf.Min(4, playerLevel + 1)) continue;
+            if (HasOwnedThreeStar(d.key)) continue;
             for (int k = 0; k < lc.focusClasses.Length; k++)
             {
                 if (d.classTag == lc.focusClasses[k]) candidates.Add(d);
@@ -238,7 +239,12 @@ public partial class RoguelikeFramework
     {
         int cost = RollShopCostByLevel();
         var filtered = new List<UnitDef>();
-        foreach (var kv in unitDefs) if (kv.Value.cost == cost) filtered.Add(kv.Value);
+        foreach (var kv in unitDefs)
+        {
+            if (kv.Value.cost != cost) continue;
+            if (HasOwnedThreeStar(kv.Key)) continue;
+            filtered.Add(kv.Value);
+        }
 
         if (filtered.Count == 0)
         {
@@ -248,6 +254,7 @@ public partial class RoguelikeFramework
                 int c2 = Mathf.Clamp(cost + d, 1, 5);
                 foreach (var kv in unitDefs)
                 {
+                    if (HasOwnedThreeStar(kv.Key)) continue;
                     if (kv.Value.cost == c1 || kv.Value.cost == c2) filtered.Add(kv.Value);
                 }
             }
@@ -266,6 +273,7 @@ public partial class RoguelikeFramework
         {
             var d = kv.Value;
             if (d.cost > maxCostByLevel) continue;
+            if (HasOwnedThreeStar(d.key)) continue;
             bool hit = false;
             for (int i = 0; i < lc.focusClasses.Length; i++) if (d.classTag == lc.focusClasses[i]) hit = true;
             for (int i = 0; i < lc.focusOrigins.Length; i++) if (d.originTag == lc.focusOrigins[i]) hit = true;
@@ -321,6 +329,11 @@ public partial class RoguelikeFramework
         for (int i = 0; i < benchUnits.Count; i++) if (benchUnits[i].def.key == key && benchUnits[i].star == star) c++;
         for (int i = 0; i < deploySlots.Count; i++) if (deploySlots[i].def.key == key && deploySlots[i].star == star) c++;
         return c;
+    }
+
+    private bool HasOwnedThreeStar(string key)
+    {
+        return CountOwnedCopies(key, 3) > 0;
     }
 
     private bool CanBuyOfferNow(string key)
@@ -451,6 +464,11 @@ public partial class RoguelikeFramework
                     battleLog = fromStar == 1
                         ? $"合成成功：{up.Name} 升为2星"
                         : $"超级合成：{up.Name} 升为3星";
+                    // Stage B1 视觉增强: 升星时在合成单位位置触发特效
+                    if (up.x >= 0 && up.y >= 0)
+                    {
+                        SpawnHitFlash(up, fromStar == 1 ? new Color(0.6f, 0.8f, 1f) : new Color(1f, 0.82f, 0.2f), 1.2f);
+                    }
                     PushEvent(fromStar == 1 ? $"★升星成功：{up.Name} 升为2星" : $"★★★超级合成：{up.Name} 升为3星");
 
                     merged = true;

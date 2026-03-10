@@ -317,6 +317,55 @@ public partial class RoguelikeFramework
         }
     }
 
+    private void DrawShopHexPanel(float x, float y, float w, float h)
+    {
+        GUI.Box(new Rect(x, y, w, h), "商店奇物");
+        GUI.Label(new Rect(x + 12, y + 8, w - 24, 18), "商店节点可直接购买海克斯与构筑奇物");
+        if (GUI.Button(new Rect(x + w - 136, y + 6, 124, 24), "刷新奇物(-2)"))
+        {
+            if (gold >= 2)
+            {
+                gold -= 2;
+                RollShopHexOffers();
+            }
+            else battleLog = "金币不足，无法刷新商店奇物";
+        }
+
+        if (currentShopHexOffers.Count == 0)
+        {
+            GUI.Label(new Rect(x + 12, y + 40, w - 24, 22), "暂无奇物可购买");
+            return;
+        }
+
+        float cardH = 92f;
+        for (int i = 0; i < currentShopHexOffers.Count; i++)
+        {
+            var hOffer = currentShopHexOffers[i];
+            int cost = i < currentShopHexCosts.Count ? currentShopHexCosts[i] : 0;
+            float cy = y + 38f + i * (cardH + 8f);
+            Rect card = new Rect(x + 10f, cy, w - 20f, cardH);
+
+            Color border = hOffer.rarity switch
+            {
+                "彩" => new Color(1f, 0.72f, 0.26f, 0.96f),
+                "金" => new Color(0.9f, 0.76f, 0.28f, 0.96f),
+                "蓝" => new Color(0.35f, 0.75f, 1f, 0.96f),
+                _ => new Color(0.82f, 0.84f, 0.88f, 0.96f)
+            };
+
+            Color old = GUI.color;
+            GUI.color = border;
+            GUI.DrawTexture(card, Texture2D.whiteTexture);
+            GUI.color = new Color(0.08f, 0.1f, 0.15f, 0.98f);
+            GUI.DrawTexture(new Rect(card.x + 2, card.y + 2, card.width - 4, card.height - 4), Texture2D.whiteTexture);
+            GUI.color = old;
+
+            GUI.Label(new Rect(card.x + 10, card.y + 8, card.width - 110, 18), $"[{hOffer.rarity}] {hOffer.name}");
+            GUI.Label(new Rect(card.x + 10, card.y + 30, card.width - 118, 42), hOffer.desc, wrapLabelStyle);
+            if (GUI.Button(new Rect(card.x + card.width - 96, card.y + 28, 84, 30), $"购买({cost})")) BuyShopHex(i);
+        }
+    }
+
     private void RecommendCompByBoard(List<Unit> team)
     {
         if (compDefs.Count == 0) return;
@@ -391,8 +440,8 @@ public partial class RoguelikeFramework
             var u = all[i];
             if (deploySlots.Count < cap)
             {
-                if (u.ClassTag == "Vanguard") { u.x = Mathf.Clamp(fx++, 0, 4); u.y = 1; }
-                else if (u.ClassTag == "Artillery") { u.x = Mathf.Clamp(bx++, 0, 4); u.y = 3; }
+                if (u.ClassTag == "Vanguard" || u.ClassTag == "Guardian") { u.x = Mathf.Clamp(fx++, 0, 4); u.y = 1; }
+                else if (u.ClassTag == "Artillery" || u.ClassTag == "Controller" || u.ClassTag == "Medic") { u.x = Mathf.Clamp(bx++, 0, 4); u.y = 3; }
                 else { u.x = Mathf.Clamp(mx++, 0, 4); u.y = 2; }
                 deploySlots.Add(u);
             }
@@ -740,7 +789,7 @@ public partial class RoguelikeFramework
             else
             {
                 GUI.Box(new Rect(16, 220, 320, 124), "地图分支");
-                GUI.Label(new Rect(28, 248, 292, 76), "选择下一条路线。\n普通/精英会进入准备与战斗，商店节点可直接购物后离开，问号会揭示随机事件。", wrapLabelStyle);
+                GUI.Label(new Rect(28, 248, 292, 76), "选择下一条路线。\n普通/精英会进入准备与战斗，商店节点可购物并购买奇物海克斯，问号会揭示随机事件。", wrapLabelStyle);
 
                 float mapX = 360f;
                 float mapY = 210f;
@@ -820,7 +869,7 @@ public partial class RoguelikeFramework
             var stageNode = GetCurrentStageNode();
             var stageType = GetEffectiveStageType(stageNode);
             GUI.Box(new Rect(16, 220, leftW, 78), "");
-            GUI.Label(new Rect(24, 228, leftW - 20, 20), stageType == StageType.Shop ? "商店节点：本回合可以集中购物，不会触发战斗" : "准备阶段：拖拽棋子到战场左侧5列布阵");
+            GUI.Label(new Rect(24, 228, leftW - 20, 20), stageType == StageType.Shop ? "商店节点：可购物、刷新并购买海克斯奇物，不会触发战斗" : "准备阶段：拖拽棋子到战场左侧5列布阵");
             GUI.Label(new Rect(24, 250, leftW - 20, 20), $"羁绊：{GetSynergySummary(deploySlots)}");
             GUI.Label(new Rect(24, 272, leftW - 20, 20), $"阵容评分：{GetCompPowerScore(deploySlots)}");
 
@@ -878,7 +927,7 @@ public partial class RoguelikeFramework
             float oddsW = Mathf.Max(310f, topButtonsX - oddsX - 12f);
             DrawShopOddsPanel(new Rect(oddsX, panelY + 6, oddsW, 34f));
 
-            string rerollBtnText = freeRerollTurns > 0 ? $"免费({freeRerollTurns})" : "刷新(-1)";
+            string rerollBtnText = freeRerollTurns > 0 ? $"免费({freeRerollTurns})" : "刷新(-2)";
             if (GUI.Button(new Rect(topButtonsX, panelY + 6, 90, 34), rerollBtnText)) RefreshShop();
             if (GUI.Button(new Rect(topButtonsX + 98, panelY + 6, 108, 34), "买经验(-4)"))
             {
@@ -962,7 +1011,14 @@ public partial class RoguelikeFramework
             float foldedCompY = panelY - 64f;
             float compH = showCompPanelFoldout ? Mathf.Max(150f, panelY - compY - 12f) : 52f;
             DrawSynergyClickPanel(rightX, 220, rightW, syH, deploySlots);
-            DrawCompPanel(rightX, showCompPanelFoldout ? compY : foldedCompY, rightW, compH, deploySlots);
+            if (stageType == StageType.Shop)
+            {
+                DrawShopHexPanel(rightX, compY, rightW, Mathf.Max(196f, panelY - compY - 12f));
+            }
+            else
+            {
+                DrawCompPanel(rightX, showCompPanelFoldout ? compY : foldedCompY, rightW, compH, deploySlots);
+            }
         }
 
         if (state == RunState.Battle)
@@ -1047,7 +1103,7 @@ public partial class RoguelikeFramework
 
         if (state == RunState.Hex)
         {
-            GUI.Box(new Rect(16, 220, 740, 260), "海克斯选择（三选一）");
+            GUI.Box(new Rect(16, 220, 740, 260), pendingEliteHexReward ? "精英海克斯战利品（三选一）" : "海克斯选择（三选一）");
             int bestHexScore = int.MinValue;
             int bestHexIdx = -1;
             for (int i = 0; i < currentHexOffers.Count; i++)

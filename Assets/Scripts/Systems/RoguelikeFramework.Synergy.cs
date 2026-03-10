@@ -68,7 +68,7 @@ public partial class RoguelikeFramework
         }
         if (pool.Count == 0) return;
 
-        int offerCount = Mathf.Min(2, pool.Count);
+        int offerCount = Mathf.Min(HasHex("royal_supply") ? 3 : 2, pool.Count);
         for (int i = 0; i < offerCount; i++)
         {
             int pick = UnityEngine.Random.Range(0, pool.Count);
@@ -221,10 +221,12 @@ public partial class RoguelikeFramework
             "Vanguard" => "钢铁先锋",
             "Rider" => "机动骑兵",
             "Artillery" => "火力炮阵",
+            "Controller" => "控场奇谋",
             "Leader" => "领袖",
             "Guardian" => "守护者",
             "Assassin" => "刺客",
             "Soldier" => "士兵",
+            "Medic" => "医者",
             _ => classTag
         };
     }
@@ -255,9 +257,11 @@ public partial class RoguelikeFramework
             "Vanguard" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位减伤 +10% / +22%（海克斯可再叠加）",
             "Rider" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位速度 +2 / +5，首击突进更强",
             "Artillery" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位伤害 +12% / +22%，4层额外射程+1",
+            "Controller" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位追加伤害 +4 / +10，4层额外射程+1",
             "Assassin" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位暴击率 +20% / +45%，暴击伤害 +35%",
             "Guardian" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位减伤 +12% / +24%，并提供全队小额护卫减伤",
             "Soldier" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：本羁绊单位普攻伤害 +10% / +22%",
+            "Medic" => $"{GetClassCn(classTag)}：2/4生效，当前{count}。效果：行动时为最低生命友军回复 8% / 16% 最大生命",
             "Leader" => $"{GetClassCn(classTag)}：1生效，当前{count}。效果：全队伤害与速度小幅提升",
             _ => $"{GetClassCn(classTag)}：当前{count}"
         };
@@ -427,6 +431,8 @@ public partial class RoguelikeFramework
         int ass = CountClass(team, "Assassin");
         int g = CountClass(team, "Guardian");
         int s = CountClass(team, "Soldier");
+        int medic = CountClass(team, "Medic");
+        int ctrl = CountClass(team, "Controller");
         int l = CountClass(team, "Leader");
         int mhp = GetMaHouPaoLevel(team);
         int sxq = GetShiXiangQuanLevel(team);
@@ -443,8 +449,12 @@ public partial class RoguelikeFramework
         if (ass >= 4) score += 68;
         if (g >= 2) score += 30;
         if (g >= 4) score += 58;
+        if (ctrl >= 2) score += 34;
+        if (ctrl >= 4) score += 62;
         if (s >= 2) score += 26;
         if (s >= 4) score += 52;
+        if (medic >= 2) score += 30;
+        if (medic >= 4) score += 58;
         if (l >= 1) score += 22;
         if (mhp >= 1) score += 36;
         if (mhp >= 2) score += 40;
@@ -484,9 +494,17 @@ public partial class RoguelikeFramework
             if (HasHex("cannon_master")) m += 0.25f;
             if (HasHex("artillery_overclock")) m += 0.15f;
         }
+        int ctrl = CountClass(team, "Controller");
+        if (from.ClassTag == "Controller")
+        {
+            if (ctrl >= 2) m += 0.08f;
+            if (ctrl >= 4) m += 0.18f;
+            if (HasHex("controller_net")) m += 0.12f;
+        }
 
         if (HasHex("team_atk")) m += 0.08f;
         if (HasHex("execution_edge")) m += 0.04f;
+        if (HasHex("tri_service") && CountClass(team, "Artillery") >= 1 && CountClass(team, "Controller") >= 1 && CountClass(team, "Medic") >= 1) m += 0.08f;
         m += GetLockedCompDamageBonus(from);
 
         int soldier = CountClass(team, "Soldier");
@@ -499,6 +517,13 @@ public partial class RoguelikeFramework
         int leader = CountClass(team, "Leader");
         if (leader >= 1) m += 0.06f;
         if (from.ClassTag == "Leader") m += 0.10f;
+
+        int medic = CountClass(team, "Medic");
+        if (from.ClassTag == "Medic")
+        {
+            if (medic >= 2) m += 0.06f;
+            if (medic >= 4) m += 0.12f;
+        }
 
         int maHouPao = GetMaHouPaoLevel(team);
         if (maHouPao >= 1)
@@ -586,6 +611,9 @@ public partial class RoguelikeFramework
         int art = CountClass(team, "Artillery");
         if (u.ClassTag == "Artillery" && art >= 4) b += 1;
         if (u.ClassTag == "Artillery" && HasHex("artillery_range")) b += 1;
+        int ctrl = CountClass(team, "Controller");
+        if (u.ClassTag == "Controller" && ctrl >= 4) b += 1;
+        if (u.ClassTag == "Controller" && HasHex("controller_net")) b += 1;
         int chePaoLianYing = GetChePaoLianYingLevel(team);
         if (u.Family == "炮" && chePaoLianYing >= 2) b += 1;
         return b;
@@ -609,6 +637,15 @@ public partial class RoguelikeFramework
             if (guardian >= 4) r += 0.24f;
         }
         if (guardian >= 2) r += 0.04f;
+        int medic = CountClass(team, "Medic");
+        if (u.ClassTag == "Medic")
+        {
+            if (medic >= 2) r += 0.05f;
+            if (medic >= 4) r += 0.10f;
+            if (HasHex("medic_banner")) r += 0.08f;
+        }
+        if (u.ClassTag == "Assassin" && HasHex("assassin_gate")) r += 0.25f;
+        if (HasHex("tri_service") && CountClass(team, "Artillery") >= 1 && CountClass(team, "Controller") >= 1 && CountClass(team, "Medic") >= 1) r += 0.05f;
 
         int steel = CountOrigin(team, "Steel");
         if (u.OriginTag == "Steel")

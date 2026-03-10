@@ -25,6 +25,8 @@ public partial class RoguelikeFramework
         int dist = Mathf.Abs(actor.x - target.x) + Mathf.Abs(actor.y - target.y);
         int dmg = Mathf.RoundToInt(actor.atk * GetDamageMultiplier(actor) * GetCritMultiplier(actor));
 
+        TryTriggerMedicSupport(actor);
+
         // 特色能力
         if (actor.Name.Contains("突袭马") && !actor.usedCharge)
         {
@@ -85,11 +87,22 @@ public partial class RoguelikeFramework
                 dmg += thunder >= 4 ? 7 : 4;
             }
         }
+        if (actor.ClassTag == "Controller")
+        {
+            int ctrl = CountClass(actor.player ? playerUnits : enemyUnits, "Controller");
+            if (ctrl >= 2) dmg += 4;
+            if (ctrl >= 4) dmg += 6;
+        }
 
         if (HasHex("assassin_bloom") && actor.ClassTag == "Assassin")
         {
             if (!actor.usedCharge) dmg += 8;
             if (UnityEngine.Random.value < 0.12f) dmg = Mathf.RoundToInt(dmg * 1.28f);
+        }
+        if (HasHex("assassin_gate") && actor.ClassTag == "Assassin" && !actor.usedCharge)
+        {
+            dmg += 18;
+            actor.usedCharge = true;
         }
         if (HasHex("assassin_contract") && actor.ClassTag == "Assassin")
         {
@@ -265,6 +278,35 @@ public partial class RoguelikeFramework
 
         AmbushTeam(playerUnits, enemyUnits);
         AmbushTeam(enemyUnits, playerUnits);
+    }
+
+    private void TryTriggerMedicSupport(Unit actor)
+    {
+        var team = actor.player ? playerUnits : enemyUnits;
+        int medic = CountClass(team, "Medic");
+        bool grace = HasHex("guardian_grace") && (actor.ClassTag == "Guardian" || actor.ClassTag == "Medic");
+        if (actor.ClassTag != "Medic" && !grace) return;
+        if (medic < 2 && !grace) return;
+
+        Unit target = null;
+        float lowestRatio = 1.1f;
+        for (int i = 0; i < team.Count; i++)
+        {
+            var ally = team[i];
+            if (!ally.Alive || ally.hp >= ally.maxHp) continue;
+            float ratio = ally.maxHp > 0 ? ally.hp / (float)ally.maxHp : 1f;
+            if (ratio < lowestRatio)
+            {
+                lowestRatio = ratio;
+                target = ally;
+            }
+        }
+        if (target == null) return;
+
+        float healScale = medic >= 4 ? 0.16f : medic >= 2 ? 0.08f : 0.05f;
+        int heal = Mathf.Max(3, Mathf.RoundToInt(target.maxHp * healScale));
+        target.hp = Mathf.Min(target.maxHp, target.hp + heal);
+        battleLog = $"{actor.Name} 治疗 {target.Name} +{heal}";
     }
 
     private Unit NearestAlive(Unit from, List<Unit> list)

@@ -71,6 +71,24 @@ public partial class RoguelikeFramework
             preferredKeys = new[] { "soldier_guard", "soldier_phalanx", "chariot_tank", "horse_raider", "horse_lancer", "horse_banner" },
             rerollBudget = 1
         },
+        new DevCompPlan
+        {
+            id = "mid_control_battery",
+            name = "控场炮网",
+            difficulty = "中等",
+            classes = new[] { "Controller", "Artillery" },
+            preferredKeys = new[] { "cannon_arc", "cannon_scout", "cannon_frost", "cannon_storm", "cannon_burst", "cannon_sniper" },
+            rerollBudget = 2
+        },
+        new DevCompPlan
+        {
+            id = "mid_holy_recovery",
+            name = "圣愈护城",
+            difficulty = "中等",
+            classes = new[] { "Medic", "Guardian" },
+            preferredKeys = new[] { "guard_holy", "soldier_zeal", "ele_sage", "guard_mirror", "ele_guard", "horse_banner" },
+            rerollBudget = 2
+        },
     };
 
     // 开发快捷：一键推进一小步，降低手动回归成本。
@@ -621,6 +639,10 @@ public partial class RoguelikeFramework
             if (h.id == "stone_oath") score += 16;
             if (h.id == "venom_payload") score += 18;
             if (h.id == "windwalk") score += 16;
+            if (h.id == "controller_net" && HasPlanClass(plan, "Controller")) score += 22;
+            if (h.id == "medic_banner" && HasPlanClass(plan, "Medic")) score += 22;
+            if (h.id == "tri_service" && HasPlanClass(plan, "Artillery") && (HasPlanClass(plan, "Controller") || HasPlanClass(plan, "Medic"))) score += 24;
+            if (h.id == "guardian_grace" && (HasPlanClass(plan, "Guardian") || HasPlanClass(plan, "Medic"))) score += 18;
             if (h.id == "assassin_contract" && HasPlanClass(plan, "Assassin")) score += 24;
             if (h.id == "cannon_master" && HasPlanClass(plan, "Artillery")) score += 18;
             if (h.id == "artillery_range" && HasPlanClass(plan, "Artillery")) score += 15;
@@ -666,6 +688,7 @@ public partial class RoguelikeFramework
         int streakGold = winStreak >= 2 ? Mathf.Min(3, winStreak / 2) : (loseStreak >= 2 ? Mathf.Min(2, loseStreak / 2) : 0);
         int interest = Mathf.Min(GetInterestCap(), gold / 10);
         int hexBonus = HasHex("rich") ? 4 : 0;
+        if (HasHex("royal_supply")) hexBonus += 6;
 
         gold += roundBaseGold + streakGold + interest + hexBonus;
         if (effectiveType == StageType.Shop) gold += 6;
@@ -711,6 +734,7 @@ public partial class RoguelikeFramework
 
         battleLog = $"准备阶段：第{st.floor}层({StageName(effectiveType)}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}" +
                     (HasHex("reroll_engine") ? " | 精密改造：本回合2次免费刷新" : "") +
+                    (HasHex("royal_supply") ? " | 王庭军需：额外+6金币" : "") +
                     (effectiveType == StageType.Shop ? " | 商店节点：额外+6金币 +2次免费刷新" : "");
     }
 
@@ -905,6 +929,7 @@ public partial class RoguelikeFramework
             state = RunState.Stage;
             return;
         }
+        var effectiveType = GetEffectiveStageType(st);
 
         if (win)
         {

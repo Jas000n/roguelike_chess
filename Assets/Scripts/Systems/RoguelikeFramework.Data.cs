@@ -12,13 +12,13 @@ public partial class RoguelikeFramework
 
         // 车系变体
         AddDef("chariot_tank", "坦克车", "车", "Vanguard", "Steel", 3, 66, 7, 5, 1);
-        AddDef("chariot_sport", "跑车", "车", "Rider", "Wind", 3, 38, 11, 13, 1);
-        AddDef("chariot_shock", "震荡车", "车", "Vanguard", "Thunder", 4, 58, 11, 7, 1);
+        AddDef("chariot_sport", "跑车", "车", "Assassin", "Wind", 3, 36, 12, 13, 1);
+        AddDef("chariot_shock", "震荡车", "车", "Guardian", "Thunder", 4, 60, 11, 7, 1);
 
         // 马系变体
         AddDef("horse_raider", "突袭马", "马", "Rider", "Shadow", 2, 33, 11, 12, 1);
-        AddDef("horse_banner", "战旗马", "马", "Rider", "Stone", 3, 40, 9, 10, 1);
-        AddDef("horse_nightmare", "梦魇马", "马", "Rider", "Night", 4, 37, 15, 11, 1);
+        AddDef("horse_banner", "战旗马", "马", "Guardian", "Stone", 3, 44, 8, 10, 1);
+        AddDef("horse_nightmare", "梦魇马", "马", "Assassin", "Night", 4, 35, 16, 11, 1);
         AddDef("horse_wind", "疾风马", "马", "Rider", "Wind", 2, 31, 10, 13, 1);
 
         // 炮系变体
@@ -26,9 +26,10 @@ public partial class RoguelikeFramework
         AddDef("cannon_mortar", "迫击炮", "炮", "Artillery", "Stone", 3, 34, 13, 7, 3);
         AddDef("cannon_burst", "连发炮", "炮", "Artillery", "Steel", 2, 28, 10, 10, 3);
         AddDef("cannon_sniper", "狙击炮", "炮", "Artillery", "Shadow", 3, 25, 16, 8, 5);
-        AddDef("cannon_arc", "电弧炮", "炮", "Artillery", "Thunder", 2, 27, 11, 9, 3);
-        AddDef("cannon_scout", "侦察炮", "炮", "Artillery", "Wind", 1, 22, 8, 10, 3);
-        AddDef("cannon_frost", "寒晶炮", "炮", "Artillery", "Frost", 4, 27, 17, 7, 4);
+        AddDef("cannon_arc", "电弧炮", "炮", "Controller", "Thunder", 2, 27, 10, 9, 3);
+        AddDef("cannon_scout", "侦察炮", "炮", "Controller", "Wind", 1, 24, 7, 10, 3);
+        AddDef("cannon_frost", "寒晶炮", "炮", "Controller", "Frost", 4, 29, 15, 7, 4);
+        AddDef("cannon_storm", "天幕炮", "炮", "Controller", "Blaze", 5, 34, 18, 8, 5);
 
         // 基础补充
         AddDef("general_fire", "火焰君主", "帅", "Leader", "Blaze", 5, 58, 13, 8, 1);
@@ -39,6 +40,7 @@ public partial class RoguelikeFramework
         AddDef("guard_mirror", "镜影士", "士", "Guardian", "Mist", 4, 46, 12, 10, 1);
         AddDef("guard_mist", "雾刃士", "士", "Assassin", "Mist", 3, 31, 13, 12, 1);
         AddDef("guard_holy", "圣卫士", "士", "Medic", "Holy", 3, 48, 8, 8, 2);
+        AddDef("ele_sage", "玄灵象", "象", "Medic", "Mist", 5, 62, 10, 7, 2);
         AddDef("chariot_bulwark", "壁垒车", "车", "Vanguard", "Stone", 2, 58, 7, 6, 1);
         AddDef("chariot_ram", "冲城车", "车", "Vanguard", "Blaze", 4, 62, 10, 6, 1);
         AddDef("soldier_phalanx", "方阵兵", "兵", "Vanguard", "Steel", 1, 34, 6, 7, 1);
@@ -386,6 +388,36 @@ public partial class RoguelikeFramework
             bonusReduction = 0.02f,
             bonusSpeed = 2
         });
+        compDefs.Add(new CompDef
+        {
+            id = "control_battery",
+            name = "控场炮网",
+            desc = "功能炮与输出炮混编，靠射程与持续压制赢回合",
+            focusClasses = new[] { "Controller", "Artillery" },
+            focusOrigins = new[] { "Thunder", "Frost", "Blaze", "Wind" },
+            classA = "Controller",
+            classB = "Artillery",
+            needClass2A = 2,
+            needClass2B = 2,
+            bonusDmg = 0.14f,
+            bonusReduction = 0.02f,
+            bonusSpeed = 1
+        });
+        compDefs.Add(new CompDef
+        {
+            id = "holy_recovery",
+            name = "圣愈护城",
+            desc = "医者抬血线，守护者和先锋扛住前排",
+            focusClasses = new[] { "Medic", "Guardian" },
+            focusOrigins = new[] { "Holy", "Mist", "Stone" },
+            classA = "Medic",
+            classB = "Guardian",
+            needClass2A = 2,
+            needClass2B = 2,
+            bonusDmg = 0.05f,
+            bonusReduction = 0.14f,
+            bonusSpeed = 0
+        });
     }
 
     private StageNode GetCurrentStageNode()
@@ -507,6 +539,9 @@ public partial class RoguelikeFramework
         AddHex("royal_supply", "王庭军需", "彩", "准备阶段额外获得 6 金币，并在商店节点额外刷新 1 张海克斯奇物");
         AddHex("assassin_gate", "影门突袭", "彩", "刺客开战切入后排时首次攻击额外造成 18 伤害并获得 25% 减伤");
         AddHex("guardian_grace", "神佑守望", "金", "守护者与医者每回合首次行动时为最低生命友军回复生命");
+        AddHex("controller_net", "控场棋网", "金", "控场奇谋单位追加伤害提高，并获得额外射程");
+        AddHex("medic_banner", "回春军旗", "金", "医者治疗量提高，且被治疗单位获得短暂减伤");
+        AddHex("tri_service", "三军协同", "彩", "炮/控/医同时上阵时，全队获得额外伤害与续航");
     }
 
     private void AddHex(string id, string name, string rarity, string desc)
