@@ -220,3 +220,10 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Done
 - 推进 Stage B3 (战后强化奖励深度)：在已有基本奖励(金币/回血/招募/海克斯)基础上，为 `PickReward` 添加了三项构筑型选项的逻辑锚点（`free_reroll_3`, `gold_interest`, `exp_burst`），进一步丰富中后期的决策空间。
 - `exp_burst` 逻辑已实装，根据当前等级给予爆发式经验；另外两个待挂载对应的状态修饰符（如改变利息上限或多回合刷新计数）。
+
+## 2026-03-09 23:19 EST
+### Done
+- 实装 B3 增强奖励：
+  - `free_reroll_3` (补给连拨): 直接提供 3 次免费刷新机会 (`freeRerollTurns` 计数，随刷新消耗，优先级置于金币消耗前)。
+  - `gold_interest` (对赌协议): 立即获得金币，但通过引入 `interestCapModifier` 永久降低利息上限。
+  - 核心经济机制 (`RefreshShop`, `GetInterestCap`) 兼容处理了这些修饰符结构，并在重开时正常清理。
