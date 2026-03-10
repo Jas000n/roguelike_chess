@@ -527,7 +527,7 @@ public partial class RoguelikeFramework
     private void DrawUnitChipCard(Rect r, UnitDef def, int star, int cost, bool showCost)
     {
         if (def == null) return;
-        bool compact = r.width <= 96f;
+        bool compact = r.width <= 118f;
         string Cut(string text, int maxLen)
         {
             if (string.IsNullOrEmpty(text) || text.Length <= maxLen) return text;
@@ -540,26 +540,30 @@ public partial class RoguelikeFramework
         GUI.DrawTexture(new Rect(r.x + 2, r.y + 2, r.width - 4, r.height - 4), Texture2D.whiteTexture);
 
         var icon = PickIcon(def);
-        float iconW = compact ? 28f : 34f;
+        float iconW = compact ? 36f : 44f;
         GUI.color = new Color(0.15f, 0.22f, 0.34f, 0.95f);
-        GUI.DrawTexture(new Rect(r.x + 4, r.y + 5, iconW, iconW), Texture2D.whiteTexture);
+        GUI.DrawTexture(new Rect(r.x + 6, r.y + 7, iconW, iconW), Texture2D.whiteTexture);
         GUI.color = Color.white;
-        if (icon != null) GUI.DrawTexture(new Rect(r.x + 4, r.y + 5, iconW, iconW), icon, ScaleMode.ScaleToFit, true);
-        else GUI.Label(new Rect(r.x + 7, r.y + 11, iconW - 4, 16), "?", chipTitleStyle);
+        if (icon != null) GUI.DrawTexture(new Rect(r.x + 6, r.y + 7, iconW, iconW), icon, ScaleMode.ScaleToFit, true);
+        else GUI.Label(new Rect(r.x + 10, r.y + 18, iconW - 6, 18), "?", chipTitleStyle);
 
         GUI.color = Color.white;
-        float tx = compact ? r.x + 34f : r.x + 42f;
-        float tw = r.width - (compact ? 36f : 44f);
+        float tx = compact ? r.x + 48f : r.x + 58f;
+        float tw = r.width - (compact ? 54f : 64f);
         string cls = GetClassCn(def.classTag).Replace("钢铁", "").Replace("机动", "").Replace("火力", "").Replace("暗影", "");
         string traitText = compact ? $"{cls}/{GetOriginCn(def.originTag)}" : $"{GetClassCn(def.classTag)} / {GetOriginCn(def.originTag)}";
-        GUI.Label(new Rect(tx, r.y + 2, tw, 16), Cut(def.name, compact ? 4 : 8), chipTitleStyle);
-        GUI.Label(new Rect(tx, r.y + 19, tw, 14), Cut(traitText, compact ? 8 : 14), chipMetaStyle);
+        GUI.Label(new Rect(tx, r.y + 6, tw, 18), Cut(def.name, compact ? 6 : 10), chipTitleStyle);
+        GUI.Label(new Rect(tx, r.y + 26, tw, 16), Cut(traitText, compact ? 10 : 18), chipMetaStyle);
         // 强化星级视觉 (Stage B1)
         Color starColor = star == 3 ? new Color(1f, 0.82f, 0.2f) : (star == 2 ? new Color(0.6f, 0.8f, 1f) : new Color(0.86f, 0.93f, 1f));
         GUI.color = starColor;
         string starStr = star == 3 ? "★★★" : (star == 2 ? "★★" : "★");
-        GUI.Label(new Rect(tx, r.y + 34, 70, 14), starStr, chipMetaStyle);
-        if (showCost) GUI.Label(new Rect(r.x + r.width - 44, r.y + 34, 40, 14), $"{cost}金", chipMetaStyle);
+        GUI.Label(new Rect(tx, r.y + 46, 70, 16), starStr, chipMetaStyle);
+        if (showCost)
+        {
+            GUI.color = new Color(1f, 0.86f, 0.38f, 1f);
+            GUI.Label(new Rect(r.x + r.width - 52, r.y + 46, 46, 16), $"{cost}金", chipMetaStyle);
+        }
         GUI.color = old;
     }
 
@@ -576,7 +580,8 @@ public partial class RoguelikeFramework
         GUI.skin.button = buttonStyle;
         GUI.skin.label = labelStyle;
 
-        uiScale = Mathf.Clamp(Screen.height / 900f, 1.25f, 2f);
+        // Let 768p-class windows keep enough vertical room for the full bottom HUD.
+        uiScale = Mathf.Clamp(Screen.height / 900f, 1f, 2f);
         GUI.matrix = Matrix4x4.Scale(new Vector3(uiScale, uiScale, 1f));
         float guiW = Screen.width / uiScale;
         float guiH = Screen.height / uiScale;
@@ -714,26 +719,47 @@ public partial class RoguelikeFramework
             }
 
             float panelX = 16f;
-            float panelY = guiH - 212f;
+            float panelY = guiH - 286f;
             float panelW = guiW - 32f;
-            GUI.Box(new Rect(panelX, panelY, panelW, 196f), "准备阶段");
+            float panelH = 270f;
+            GUI.Box(new Rect(panelX, panelY, panelW, panelH), "准备阶段");
 
-            GUI.Label(new Rect(panelX + 14, panelY + 8, 220, 28), $"<size=19><b>金币 {gold}</b></size>", hudStatStyle);
-            GUI.Label(new Rect(panelX + 190, panelY + 8, 260, 28), $"<size=19><b>经验 {exp}/{ExpNeed(playerLevel)}</b></size>", hudStatStyle);
-            GUI.Label(new Rect(panelX + 430, panelY + 8, 240, 28), $"<size=19><b>上阵上限 {GetBoardCap()}</b></size>", hudStatStyle);
+            float opsW = compact ? 430f : 500f;
+            float shopAreaW = panelW - 32f;
+            float shopGapX = 10f;
+            int shopCols = 5;
+            float shopW = (shopAreaW - (shopCols - 1) * shopGapX) / shopCols;
+            float shopH = 86f;
+            float benchGap = 10f;
+            float benchW = (panelW - 32f - 7f * benchGap) / 8f;
+            float benchH = 92f;
 
-            GUI.Label(new Rect(panelX + 16, panelY + 34, 220, 20), "商店（费用分层已接入）");
-            int shopCols = compact ? 3 : 5;
-            float shopW = compact ? 152f : 136f;
-            float shopH = compact ? 62f : 54f;
-            float shopGapX = 8f;
-            float shopGapY = 6f;
+            GUI.Label(new Rect(panelX + 14, panelY + 8, 150, 28), $"<size=21><b>金币 {gold}</b></size>", hudStatStyle);
+            GUI.Label(new Rect(panelX + 170, panelY + 8, 180, 28), $"<size=21><b>经验 {exp}/{ExpNeed(playerLevel)}</b></size>", hudStatStyle);
+            GUI.Label(new Rect(panelX + 360, panelY + 8, 160, 28), $"<size=21><b>上阵 {GetBoardCap()}</b></size>", hudStatStyle);
+            float topButtonsX = panelX + panelW - opsW;
+            GUI.Label(new Rect(panelX + 520, panelY + 10, topButtonsX - (panelX + 520) - 12f, 24f), $"<size=17><b>{GetShopOddsText()}</b></size>", hudStatStyle);
+            if (GUI.Button(new Rect(topButtonsX, panelY + 8, 92, 34), "刷新(-1)")) RefreshShop();
+            if (GUI.Button(new Rect(topButtonsX + 100, panelY + 8, 108, 34), "买经验(-4)"))
+            {
+                if (gold >= 4) { gold -= 4; GainExp(4); }
+            }
+            if (GUI.Button(new Rect(topButtonsX + 216, panelY + 8, 108, 34), lockShop ? "解锁商店" : "锁定商店"))
+            {
+                lockShop = !lockShop;
+                battleLog = lockShop ? "已锁定商店（下回合保留）" : "已解锁商店";
+            }
+            if (GUI.Button(new Rect(topButtonsX + 332, panelY + 8, 148, 34), "一键自动布阵")) AutoArrangeByLockedComp();
+            if (GUI.Button(new Rect(topButtonsX + 332, panelY + panelH - 46, 148, 34), "开始战斗")) StartBattle();
+            GUI.Label(new Rect(topButtonsX, panelY + 46, 180, 20), lockShop ? "状态：已锁定商店" : "状态：商店未锁定");
+            GUI.Label(new Rect(topButtonsX + 188, panelY + 46, 190, 20), $"路线保底：{lockedCompMissStreak}/3");
+
+            GUI.Label(new Rect(panelX + 16, panelY + 44, 240, 20), "商店");
             for (int i = 0; i < shopOffers.Count; i++)
             {
                 var d = unitDefs[shopOffers[i]];
-                int row = i / shopCols;
                 int col = i % shopCols;
-                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 54 + row * (shopH + shopGapY), shopW, shopH);
+                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 66, shopW, shopH);
                 if (CountOwnedCopies(d.key) > 0)
                 {
                     float pulse = 0.45f + 0.55f * Mathf.PingPong(Time.realtimeSinceStartup * 2.2f, 1f);
@@ -749,33 +775,14 @@ public partial class RoguelikeFramework
                 }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) BuyOffer(i);
             }
-            float shopOpsX = compact ? panelX + 510f : panelX + 740f;
-            if (GUI.Button(new Rect(shopOpsX, panelY + 58, 120, 28), "刷新(-1)")) RefreshShop();
-            if (GUI.Button(new Rect(shopOpsX + 130f, panelY + 58, 120, 28), "买经验(-4)"))
-            {
-                if (gold >= 4) { gold -= 4; GainExp(4); }
-            }
-            if (GUI.Button(new Rect(shopOpsX + 260f, panelY + 58, 120, 28), lockShop ? "解锁商店" : "锁定商店"))
-            {
-                lockShop = !lockShop;
-                battleLog = lockShop ? "已锁定商店（下回合保留）" : "已解锁商店";
-            }
-            GUI.Label(new Rect(shopOpsX + 400f, panelY + 62, 170, 20), lockShop ? "状态：已锁定" : "状态：未锁定");
-            GUI.Label(new Rect(shopOpsX, panelY + 90, 560, 24), $"<size=16><b>商店概率 {GetShopOddsText()}</b></size>", hudStatStyle);
-            GUI.Label(new Rect(shopOpsX, panelY + 114, 340, 20), $"路线保底计数: {lockedCompMissStreak}/3");
-            if (GUI.Button(new Rect(shopOpsX + 240f, panelY + 108, 240, 28), "一键自动布阵（按锁定阵容）"))
-            {
-                AutoArrangeByLockedComp();
-            }
-
-            GUI.Label(new Rect(panelX + 16, panelY + 108, 120, 20), "备战席");
+            GUI.Label(new Rect(panelX + 16, panelY + 164, 120, 20), "备战席");
             for (int i = 0; i < 8; i++)
             {
-                float bx = panelX + 16 + i * 90;
+                float bx = panelX + 16 + i * (benchW + benchGap);
                 if (i < benchUnits.Count)
                 {
                     var u = benchUnits[i];
-                    Rect r = new Rect(bx, panelY + 126, 84, 52);
+                    Rect r = new Rect(bx, panelY + 186, benchW, benchH);
                     DrawUnitChipCard(r, u.def, u.star, u.def.cost, false);
                     if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                     {
@@ -784,10 +791,8 @@ public partial class RoguelikeFramework
                         battleLog = $"查看 {u.Name}";
                     }
                 }
-                else GUI.Box(new Rect(bx, panelY + 126, 84, 52), "");
+                else GUI.Box(new Rect(bx, panelY + 186, benchW, benchH), "");
             }
-
-            if (GUI.Button(new Rect(panelX + panelW - 160, panelY + 136, 140, 36), "开始战斗")) StartBattle();
 
             if (inspectedUnit != null)
             {
@@ -795,14 +800,14 @@ public partial class RoguelikeFramework
                 int benIdx = benchUnits.FindIndex(u => u.id == inspectedUnit.id);
                 if (depIdx >= 0)
                 {
-                    if (GUI.Button(new Rect(panelX + panelW - 470, panelY + 136, 140, 36), "下场(备战席)"))
+                    if (GUI.Button(new Rect(topButtonsX, panelY + panelH - 46, 150, 34), "下场(备战席)"))
                     {
                         if (ReturnDeployToBench(depIdx)) RedrawPrepareBoard();
                     }
                 }
                 if (depIdx >= 0 || benIdx >= 0)
                 {
-                    if (GUI.Button(new Rect(panelX + panelW - 315, panelY + 136, 140, 36), "出售选中"))
+                    if (GUI.Button(new Rect(topButtonsX + 160, panelY + panelH - 46, 150, 34), "出售选中"))
                     {
                         if (SellUnit(inspectedUnit)) RedrawPrepareBoard();
                     }

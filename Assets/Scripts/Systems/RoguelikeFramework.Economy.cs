@@ -387,8 +387,8 @@ public partial class RoguelikeFramework
                     }
                     battleLog = fromStar == 1
                         ? $"合成成功：{up.Name} 升为2星"
-                    PushEvent(fromStar == 1 ? $"★升星成功：{up.Name} 升为2星" : $"★★★超级合成：{up.Name} 升为3星");
                         : $"超级合成：{up.Name} 升为3星";
+                    PushEvent(fromStar == 1 ? $"★升星成功：{up.Name} 升为2星" : $"★★★超级合成：{up.Name} 升为3星");
 
                     merged = true;
                     break;
