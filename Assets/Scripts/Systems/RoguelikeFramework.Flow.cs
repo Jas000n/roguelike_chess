@@ -79,8 +79,12 @@ public partial class RoguelikeFramework
         switch (state)
         {
             case RunState.Stage:
-                StartPreparationForCurrentStage();
-                battleLog = "[DEV] Stage -> Prepare";
+                var choices = GetAvailableStageNodes();
+                if (choices.Count > 0)
+                {
+                    SelectStageNode(choices[0].id);
+                    battleLog = "[DEV] Stage -> Select Node";
+                }
                 break;
             case RunState.Prepare:
                 StartBattle();
@@ -106,7 +110,9 @@ public partial class RoguelikeFramework
 
     private void RestartRun()
     {
+        BuildLinearStages();
         stageIndex = 0;
+        currentStageNodeId = "";
         gold = 10;
         freeRerollTurns = 0;
         interestCapModifier = 0;
@@ -129,7 +135,7 @@ public partial class RoguelikeFramework
         benchUnits.Add(CreateUnit("horse_raider", true));
         benchUnits.Add(CreateUnit("cannon_burst", true));
         state = RunState.Stage;
-        battleLog = "新一轮开始";
+        battleLog = "新一轮开始：请选择地图路线";
         RedrawPrepareBoard();
     }
 
@@ -137,7 +143,7 @@ public partial class RoguelikeFramework
     private void DevRunRegression3Floors()
     {
         int startFloor = stageIndex;
-        int target = Mathf.Min(stages.Count, startFloor + 3);
+        int target = Mathf.Min(GetFinalFloor(), startFloor + 3);
         int safety = 80;
         int steps = 0;
         bool blocked = false;
@@ -148,7 +154,9 @@ public partial class RoguelikeFramework
             switch (state)
             {
                 case RunState.Stage:
-                    StartPreparationForCurrentStage();
+                    var choices = GetAvailableStageNodes();
+                    if (choices.Count == 0) blocked = true;
+                    else SelectStageNode(choices[0].id);
                     break;
                 case RunState.Prepare:
                     if (deploySlots.Count == 0) AutoDeployFallback();
@@ -209,7 +217,8 @@ public partial class RoguelikeFramework
         RestartRun();
         Check("重开后状态=Stage", state == RunState.Stage, $"state={state}");
 
-        StartPreparationForCurrentStage();
+        var firstChoices = GetAvailableStageNodes();
+        if (firstChoices.Count > 0) SelectStageNode(firstChoices[0].id);
         Check("可进入准备阶段", state == RunState.Prepare, $"state={state}");
         Check("商店有5个槽位", shopOffers.Count == 5, $"shopOffers={shopOffers.Count}");
 
@@ -344,7 +353,9 @@ public partial class RoguelikeFramework
                 switch (state)
                 {
                     case RunState.Stage:
-                        StartPreparationForCurrentStage();
+                        var choices = GetAvailableStageNodes();
+                        if (choices.Count == 0) state = RunState.GameOver;
+                        else SelectStageNode(choices[UnityEngine.Random.Range(0, choices.Count)].id);
                         break;
                     case RunState.Prepare:
                         DevAutoBuildBoard(plan);
@@ -365,7 +376,7 @@ public partial class RoguelikeFramework
                 }
             }
 
-            int curFloor = Mathf.Clamp(stageIndex + 1, 1, stages.Count);
+            int curFloor = Mathf.Clamp(stageIndex + 1, 1, GetFinalFloor());
             sumFloor += curFloor;
             sumLife += playerLife;
             sumGold += gold;
@@ -377,7 +388,7 @@ public partial class RoguelikeFramework
             if (van >= 4) van4Hits++;
             if (art >= 4) art4Hits++;
 
-            if (stageIndex >= stages.Count) clear8++;
+            if (state == RunState.GameOver && playerLife > 0 && availableStageNodeIds.Count == 0) clear8++;
             if (playerLife <= 0) died++;
         }
 
@@ -637,12 +648,14 @@ public partial class RoguelikeFramework
 
     private void StartPreparationForCurrentStage()
     {
-        if (stageIndex >= stages.Count)
+        var st = GetCurrentStageNode();
+        if (st == null)
         {
-            state = RunState.GameOver;
-            battleLog = "通关！你完成了线性章节。";
+            state = RunState.Stage;
+            battleLog = "请选择下一条地图路线";
             return;
         }
+        var effectiveType = GetEffectiveStageType(st);
 
         state = RunState.Prepare;
         battleStarted = false;
@@ -655,7 +668,9 @@ public partial class RoguelikeFramework
         int hexBonus = HasHex("rich") ? 4 : 0;
 
         gold += roundBaseGold + streakGold + interest + hexBonus;
+        if (effectiveType == StageType.Shop) gold += 6;
         rerollEngineFreeUses = HasHex("reroll_engine") ? 2 : 0;
+        if (effectiveType == StageType.Shop) rerollEngineFreeUses += 2;
         if (HasHex("reroll_engine")) gold += 1;
 
         int expGain = 2 + (HasHex("fast_train") ? 2 : 0);
@@ -693,23 +708,29 @@ public partial class RoguelikeFramework
             }
         }
 
-        var st = stages[stageIndex];
-        battleLog = $"准备阶段：第{st.floor}关({st.type}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}" +
-                    (HasHex("reroll_engine") ? " | 精密改造：本回合2次免费刷新" : "");
+        battleLog = $"准备阶段：第{st.floor}层({StageName(effectiveType)}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}" +
+                    (HasHex("reroll_engine") ? " | 精密改造：本回合2次免费刷新" : "") +
+                    (effectiveType == StageType.Shop ? " | 商店节点：额外+6金币 +2次免费刷新" : "");
     }
 
     private void StartBattle()
     {
-        if (stageIndex >= stages.Count) return;
+        var st = GetCurrentStageNode();
+        if (st == null) return;
+        var effectiveType = GetEffectiveStageType(st);
+        if (effectiveType == StageType.Shop)
+        {
+            AdvanceToStageMapFromCurrentNode();
+            return;
+        }
 
-        var st = stages[stageIndex];
         state = RunState.Battle;
         battleStarted = true;
         battleStartedTurn = 0;
         turnIndex = 0;
         inspectedUnit = null;
         showTooltip = false;
-        battleLog = $"战斗开始：第{st.floor}关 {st.type}";
+        battleLog = $"战斗开始：第{st.floor}层 {StageName(effectiveType)}";
         var lc = GetLockedComp();
         if (lc != null && IsCompActive(lc, deploySlots))
         {
@@ -799,7 +820,8 @@ public partial class RoguelikeFramework
 
     private void SpawnEnemiesForStage(StageNode st)
     {
-        int enemyCount = st.type == StageType.Boss
+        var effectiveType = GetEffectiveStageType(st);
+        int enemyCount = effectiveType == StageType.Boss
             ? Mathf.Clamp(1 + st.power, 4, 6)
             : Mathf.Clamp(2 + st.power, 3, 7);
         int[,] pos = { { 7, 2 }, { 8, 1 }, { 8, 2 }, { 8, 3 }, { 9, 1 }, { 9, 2 }, { 9, 4 }, { 7, 4 } };
@@ -811,7 +833,7 @@ public partial class RoguelikeFramework
 
             float hpScale = 1f + (st.power - 1) * 0.15f;
             float atkScale = 1f + (st.power - 1) * 0.11f;
-            if (st.type == StageType.Boss)
+            if (effectiveType == StageType.Boss)
             {
                 hpScale *= 0.88f;
                 atkScale *= 0.9f;
@@ -819,13 +841,13 @@ public partial class RoguelikeFramework
             u.hp = Mathf.RoundToInt(u.hp * hpScale);
             u.maxHp = u.hp;
             u.atk = Mathf.RoundToInt(u.atk * atkScale);
-            float spdStep = st.type == StageType.Boss ? 0.35f : 0.5f;
+            float spdStep = effectiveType == StageType.Boss ? 0.35f : 0.5f;
             u.spd += Mathf.FloorToInt((st.power - 1) * spdStep);
 
-            if (st.type == StageType.Elite || st.type == StageType.Boss || UnityEngine.Random.value < Mathf.Clamp01((st.floor - 2) * 0.12f))
+            if (effectiveType == StageType.Elite || effectiveType == StageType.Boss || UnityEngine.Random.value < Mathf.Clamp01((st.floor - 2) * 0.12f))
             {
                 UpgradeUnit(u);
-                if (st.type == StageType.Boss && UnityEngine.Random.value < 0.18f) UpgradeUnit(u); // 少量3星Boss怪
+                if (effectiveType == StageType.Boss && UnityEngine.Random.value < 0.18f) UpgradeUnit(u); // 少量3星Boss怪
             }
 
             u.x = pos[i, 0];
@@ -836,7 +858,8 @@ public partial class RoguelikeFramework
 
     private string PickEnemyUnitKey(StageNode st)
     {
-        if (st.type == StageType.Boss)
+        var effectiveType = GetEffectiveStageType(st);
+        if (effectiveType == StageType.Boss)
         {
             string[] bossLike = { "chariot_tank", "cannon_missile", "horse_nightmare", "general_fire" };
             return bossLike[UnityEngine.Random.Range(0, bossLike.Length)];
@@ -874,13 +897,19 @@ public partial class RoguelikeFramework
     private void EndBattle(bool win)
     {
         battleStarted = false;
+        var st = GetCurrentStageNode();
+        if (st == null)
+        {
+            state = RunState.Stage;
+            return;
+        }
 
         if (win)
         {
             lastBattleWin = true;
             winStreak++;
             loseStreak = 0;
-            int reward = 8 + Mathf.Min(5, stages[stageIndex].power);
+            int reward = 8 + Mathf.Min(5, st.power);
             var lc = GetLockedComp();
             if (lc != null && IsCompActive(lc, deploySlots)) reward += 2;
             gold += reward;
@@ -904,7 +933,7 @@ public partial class RoguelikeFramework
             gold += reward;
 
             int enemySurvivors = enemyUnits.FindAll(u => u.Alive).Count;
-            int lifeLoss = Mathf.Clamp(2 + stages[stageIndex].power + (enemySurvivors * 2), 2, 25);
+            int lifeLoss = Mathf.Clamp(2 + st.power + (enemySurvivors * 2), 2, 25);
             playerLife -= lifeLoss;
             battleLog = $"失败，保底 +{reward}金币 | 生命 -{lifeLoss} | {BuildBattleOutcomeDetail(false)}";
             lastBattleSummary = $"失败结算：保底+{reward}金币，生命-{lifeLoss}";
@@ -919,16 +948,7 @@ public partial class RoguelikeFramework
             }
         }
 
-        pendingHexAfterReward = stages[stageIndex].giveHex;
-        stageIndex++;
-
-        if (stageIndex >= stages.Count)
-        {
-            state = RunState.GameOver;
-            battleLog += " | 章节结束";
-            return;
-        }
-
+        pendingHexAfterReward = st.giveHex;
         RollRewardOffers();
         state = RunState.Reward;
         battleLog += " | 战后奖励三选一";

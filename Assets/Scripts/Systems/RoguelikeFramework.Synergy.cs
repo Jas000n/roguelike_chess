@@ -47,7 +47,7 @@ public partial class RoguelikeFramework
             battleLog = $"重复海克斯转化为 +4 金币：{h.name}";
         }
 
-        StartPreparationForCurrentStage();
+        AdvanceToStageMapFromCurrentNode();
     }
 
     private bool HasHex(string id)

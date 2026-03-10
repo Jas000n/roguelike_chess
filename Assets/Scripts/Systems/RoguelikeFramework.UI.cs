@@ -136,7 +136,9 @@ public partial class RoguelikeFramework
         {
             StageType.Normal => "普通",
             StageType.Elite => "精英",
-            StageType.Shop => "商店强化",
+            StageType.Shop => "商店",
+            StageType.Mystery => "问号",
+            StageType.Treasure => "宝箱",
             StageType.Boss => "Boss",
             _ => "?"
         };
@@ -266,19 +268,19 @@ public partial class RoguelikeFramework
     private void DrawCompPanel(float x, float y, float w, float h, List<Unit> team)
     {
         string lockText = string.IsNullOrEmpty(lockedCompId) ? "未锁定路线" : $"已锁定：{GetLockedComp()?.name ?? "未知"}";
-        float panelH = showCompPanelFoldout ? h : 64f;
+        float panelH = showCompPanelFoldout ? h : 52f;
         GUI.Box(new Rect(x, y, w, panelH), $"阵容路线（{lockText}）");
-        if (GUI.Button(new Rect(x + w - 132, y + 2, 122, 22), showCompPanelFoldout ? "折叠路线" : "展开路线"))
+        if (GUI.Button(new Rect(x + w - 132, y + 4, 122, 22), showCompPanelFoldout ? "折叠路线" : "展开路线"))
         {
             showCompPanelFoldout = !showCompPanelFoldout;
         }
         if (!showCompPanelFoldout)
         {
-            GUI.Label(new Rect(x + 12, y + 30, w - 24, 22), "路线面板已折叠。点击“展开路线”查看与锁定阵容。");
+            GUI.Label(new Rect(x + 12, y + 28, w - 150, 18), "路线面板已折叠。点击右侧按钮查看与锁定阵容。");
             return;
         }
 
-        if (GUI.Button(new Rect(x + w - 274, y + 2, 132, 22), "推荐并锁定"))
+        if (GUI.Button(new Rect(x + w - 274, y + 4, 132, 22), "推荐并锁定"))
         {
             RecommendCompByBoard(team);
         }
@@ -426,6 +428,55 @@ public partial class RoguelikeFramework
         return score;
     }
 
+    private void DrawHudInfoStrip(Rect rect, string text, TextAnchor align = TextAnchor.MiddleLeft)
+    {
+        Color old = GUI.color;
+        GUI.color = new Color(0.08f, 0.14f, 0.22f, 0.94f);
+        GUI.DrawTexture(rect, Texture2D.whiteTexture);
+        GUI.color = new Color(0.2f, 0.34f, 0.54f, 0.95f);
+        GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 1f), Texture2D.whiteTexture);
+        GUI.color = old;
+
+        var style = new GUIStyle(hudStatStyle);
+        style.fontSize = 14;
+        style.alignment = align;
+        GUI.Label(new Rect(rect.x + 10f, rect.y + 1f, rect.width - 20f, rect.height - 2f), text, style);
+    }
+
+    private void DrawShopOddsPanel(Rect rect)
+    {
+        Color old = GUI.color;
+        GUI.color = new Color(0.08f, 0.14f, 0.22f, 0.96f);
+        GUI.DrawTexture(rect, Texture2D.whiteTexture);
+        GUI.color = new Color(0.22f, 0.38f, 0.58f, 0.95f);
+        GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 1f), Texture2D.whiteTexture);
+        GUI.color = old;
+
+        GUI.Label(new Rect(rect.x + 10f, rect.y + 4f, 70f, 18f), "刷新概率", chipMetaStyle);
+
+        var odds = GetShopCostOddsByLevel();
+        float innerX = rect.x + 82f;
+        float chipGap = 8f;
+        float chipW = (rect.width - 92f - chipGap * 4f) / 5f;
+        for (int cost = 1; cost <= 5; cost++)
+        {
+            Rect chipRect = new Rect(innerX + (cost - 1) * (chipW + chipGap), rect.y + 4f, chipW, rect.height - 8f);
+            Color chipColor = GetUnitChipColorByCost(cost);
+            Color fill = Color.Lerp(new Color(0.08f, 0.12f, 0.18f, 0.98f), chipColor, 0.28f);
+
+            GUI.color = chipColor;
+            GUI.DrawTexture(chipRect, Texture2D.whiteTexture);
+            GUI.color = fill;
+            GUI.DrawTexture(new Rect(chipRect.x + 1.5f, chipRect.y + 1.5f, chipRect.width - 3f, chipRect.height - 3f), Texture2D.whiteTexture);
+            GUI.color = old;
+
+            var style = new GUIStyle(hudStatStyle);
+            style.fontSize = 14;
+            style.alignment = TextAnchor.MiddleCenter;
+            GUI.Label(chipRect, $"{cost}费 {odds[cost] * 100f:0}%", style);
+        }
+    }
+
     private Texture2D CreateFlatTexture(Color c)
     {
         var t = new Texture2D(1, 1, TextureFormat.RGBA32, false);
@@ -563,6 +614,26 @@ public partial class RoguelikeFramework
         GUI.color = old;
     }
 
+    private bool DrawPrimaryActionButton(Rect r, string text, bool danger = false)
+    {
+        Color old = GUI.color;
+        Color fill = danger
+            ? new Color(0.72f, 0.26f, 0.22f, 0.98f)
+            : new Color(0.9f, 0.62f, 0.18f, 0.98f);
+        Color border = danger
+            ? new Color(1f, 0.72f, 0.62f, 0.95f)
+            : new Color(1f, 0.9f, 0.55f, 0.95f);
+
+        GUI.color = border;
+        GUI.DrawTexture(r, Texture2D.whiteTexture);
+        GUI.color = fill;
+        GUI.DrawTexture(new Rect(r.x + 2, r.y + 2, r.width - 4, r.height - 4), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+        GUI.Label(new Rect(r.x, r.y + 1, r.width, r.height), text, buttonStyle);
+        GUI.color = old;
+        return GUI.Button(r, GUIContent.none, GUIStyle.none);
+    }
+
     private void OnGUI()
     {
         EnsureGuiStyles();
@@ -591,7 +662,7 @@ public partial class RoguelikeFramework
         float centerW = Mathf.Max(360f, guiW - leftW - rightW - 36f);
         float rightX = guiW - rightW - 16f;
 
-        string topInfo = $"生命:{playerLife}  连胜:{winStreak} 连败:{loseStreak}  关卡:{Mathf.Min(stageIndex + 1, stages.Count)}/{stages.Count}";
+        string topInfo = $"生命:{playerLife}  连胜:{winStreak} 连败:{loseStreak}  地图层:{Mathf.Clamp(stageIndex + 1, 1, GetFinalFloor())}/{GetFinalFloor()}";
         GUI.Box(new Rect(16, 16 + topPad, guiW - 32f, 112f), "");
         GUI.Label(new Rect(30, 24 + topPad, 740, 30), "龙棋传说 | 中国象棋 x 自走棋 x 海克斯构筑", titleStyle);
         GUI.Label(new Rect(30, 50 + topPad, 760, 22), topInfo);
@@ -660,27 +731,96 @@ public partial class RoguelikeFramework
 
         if (state == RunState.Stage)
         {
-            if (stageIndex >= stages.Count)
+            var choices = GetAvailableStageNodes();
+            if (choices.Count == 0)
             {
-                GUI.Box(new Rect(16, 220, 420, 110), "恭喜通关当前线性章节！");
+                GUI.Box(new Rect(16, 220, 420, 110), "恭喜通关当前章节地图！");
                 state = RunState.GameOver;
             }
             else
             {
-                var st = stages[stageIndex];
-                GUI.Box(new Rect(16, 220, 420, 140), "");
-                GUI.Label(new Rect(28, 232, 396, 96), $"下一关：第{st.floor}关  [{StageName(st.type)}]\n强度:{st.power}  过关后海克斯:{(st.giveHex ? "是" : "否")}\n线性推进模式（先不做分叉地图）", wrapLabelStyle);
-                if (GUI.Button(new Rect(30, 320, 140, 30), "进入准备"))
+                GUI.Box(new Rect(16, 220, 320, 124), "地图分支");
+                GUI.Label(new Rect(28, 248, 292, 76), "选择下一条路线。\n普通/精英会进入准备与战斗，商店节点可直接购物后离开，问号会揭示随机事件。", wrapLabelStyle);
+
+                float mapX = 360f;
+                float mapY = 210f;
+                float mapW = guiW - mapX - 24f;
+                float mapH = guiH - mapY - 34f;
+                GUI.Box(new Rect(mapX, mapY, mapW, mapH), "章节地图");
+
+                int maxFloor = GetFinalFloor();
+                float laneGap = 88f;
+                float floorGap = maxFloor > 1 ? (mapW - 140f) / (maxFloor - 1) : 120f;
+                float centerY = mapY + mapH * 0.5f;
+
+                Vector2 NodePos(StageNode node)
                 {
-                    StartPreparationForCurrentStage();
+                    float x = mapX + 78f + (node.floor - 1) * floorGap;
+                    float y = centerY + (node.lane - 1.5f) * laneGap;
+                    return new Vector2(x, y);
+                }
+
+                for (int i = 0; i < stages.Count; i++)
+                {
+                    var node = stages[i];
+                    Vector2 p1 = NodePos(node);
+                    for (int j = 0; j < node.nextIds.Count; j++)
+                    {
+                        if (!stageNodeById.TryGetValue(node.nextIds[j], out var next)) continue;
+                        Vector2 p2 = NodePos(next);
+                        float midX = (p1.x + p2.x) * 0.5f;
+                        Color oc = GUI.color;
+                        GUI.color = new Color(0.3f, 0.46f, 0.74f, 0.42f);
+                        GUI.DrawTexture(new Rect(Mathf.Min(p1.x, midX), p1.y - 2f, Mathf.Abs(midX - p1.x), 4f), Texture2D.whiteTexture);
+                        GUI.DrawTexture(new Rect(midX - 2f, Mathf.Min(p1.y, p2.y), 4f, Mathf.Abs(p2.y - p1.y)), Texture2D.whiteTexture);
+                        GUI.DrawTexture(new Rect(Mathf.Min(midX, p2.x), p2.y - 2f, Mathf.Abs(p2.x - midX), 4f), Texture2D.whiteTexture);
+                        GUI.color = oc;
+                    }
+                }
+
+                for (int i = 0; i < stages.Count; i++)
+                {
+                    var node = stages[i];
+                    Vector2 pos = NodePos(node);
+                    bool selectable = availableStageNodeIds.Contains(node.id);
+                    bool current = node.id == currentStageNodeId;
+                    StageType drawType = GetEffectiveStageType(node);
+                    string label = drawType == StageType.Mystery ? "?" : StageName(drawType);
+                    Color nodeColor = drawType switch
+                    {
+                        StageType.Normal => new Color(0.34f, 0.42f, 0.62f),
+                        StageType.Elite => new Color(0.62f, 0.28f, 0.3f),
+                        StageType.Shop => new Color(0.2f, 0.5f, 0.32f),
+                        StageType.Treasure => new Color(0.72f, 0.48f, 0.16f),
+                        StageType.Boss => new Color(0.5f, 0.18f, 0.18f),
+                        _ => new Color(0.4f, 0.36f, 0.62f)
+                    };
+                    if (node.cleared) nodeColor *= 0.55f;
+                    Rect nodeRect = new Rect(pos.x - 34f, pos.y - 22f, 68f, 44f);
+                    GUI.color = selectable ? nodeColor : nodeColor * 0.75f;
+                    GUI.DrawTexture(nodeRect, Texture2D.whiteTexture);
+                    if (current)
+                    {
+                        GUI.color = new Color(1f, 0.9f, 0.4f, 0.45f);
+                        GUI.DrawTexture(new Rect(nodeRect.x - 4f, nodeRect.y - 4f, nodeRect.width + 8f, nodeRect.height + 8f), Texture2D.whiteTexture);
+                    }
+                    GUI.color = Color.white;
+                    GUI.Label(new Rect(nodeRect.x + 8f, nodeRect.y + 4f, nodeRect.width - 16f, 18f), label, chipTitleStyle);
+                    GUI.Label(new Rect(nodeRect.x + 6f, nodeRect.y + 22f, nodeRect.width - 12f, 16f), $"第{node.floor}层", chipMetaStyle);
+                    if (selectable && GUI.Button(nodeRect, GUIContent.none, GUIStyle.none))
+                    {
+                        SelectStageNode(node.id);
+                    }
                 }
             }
         }
 
         if (state == RunState.Prepare)
         {
+            var stageNode = GetCurrentStageNode();
+            var stageType = GetEffectiveStageType(stageNode);
             GUI.Box(new Rect(16, 220, leftW, 78), "");
-            GUI.Label(new Rect(24, 228, leftW - 20, 20), "准备阶段：拖拽棋子到战场左侧5列布阵");
+            GUI.Label(new Rect(24, 228, leftW - 20, 20), stageType == StageType.Shop ? "商店节点：本回合可以集中购物，不会触发战斗" : "准备阶段：拖拽棋子到战场左侧5列布阵");
             GUI.Label(new Rect(24, 250, leftW - 20, 20), $"羁绊：{GetSynergySummary(deploySlots)}");
             GUI.Label(new Rect(24, 272, leftW - 20, 20), $"阵容评分：{GetCompPowerScore(deploySlots)}");
 
@@ -715,12 +855,12 @@ public partial class RoguelikeFramework
             }
 
             float panelX = 16f;
-            float panelY = guiH - 312f;
+            float panelY = guiH - 332f;
             float panelW = guiW - 32f;
-            float panelH = 296f;
+            float panelH = 316f;
             GUI.Box(new Rect(panelX, panelY, panelW, panelH), "准备阶段");
 
-            float opsW = compact ? 430f : 500f;
+            float opsW = compact ? 472f : 540f;
             float shopAreaW = panelW - 32f;
             float shopGapX = 10f;
             int shopCols = 5;
@@ -734,28 +874,31 @@ public partial class RoguelikeFramework
             GUI.Label(new Rect(panelX + 170, panelY + 8, 180, 28), $"<size=21><b>经验 {exp}/{ExpNeed(playerLevel)}</b></size>", hudStatStyle);
             GUI.Label(new Rect(panelX + 360, panelY + 8, 160, 28), $"<size=21><b>上阵 {GetBoardCap()}</b></size>", hudStatStyle);
             float topButtonsX = panelX + panelW - opsW;
-            GUI.Label(new Rect(panelX + 520, panelY + 10, topButtonsX - (panelX + 520) - 12f, 24f), $"<size=17><b>{GetShopOddsText()}</b></size>", hudStatStyle);
-            if (GUI.Button(new Rect(topButtonsX, panelY + 8, 92, 34), "刷新(-1)")) RefreshShop();
-            if (GUI.Button(new Rect(topButtonsX + 100, panelY + 8, 108, 34), "买经验(-4)"))
+            float oddsX = panelX + 520f;
+            float oddsW = Mathf.Max(310f, topButtonsX - oddsX - 12f);
+            DrawShopOddsPanel(new Rect(oddsX, panelY + 6, oddsW, 34f));
+
+            if (GUI.Button(new Rect(topButtonsX, panelY + 6, 90, 34), "刷新(-1)")) RefreshShop();
+            if (GUI.Button(new Rect(topButtonsX + 98, panelY + 6, 108, 34), "买经验(-4)"))
             {
                 if (gold >= 4) { gold -= 4; GainExp(4); }
             }
-            if (GUI.Button(new Rect(topButtonsX + 216, panelY + 8, 108, 34), lockShop ? "解锁商店" : "锁定商店"))
+            if (GUI.Button(new Rect(topButtonsX + 214, panelY + 6, 108, 34), lockShop ? "解锁商店" : "锁定商店"))
             {
                 lockShop = !lockShop;
                 battleLog = lockShop ? "已锁定商店（下回合保留）" : "已解锁商店";
             }
-            if (GUI.Button(new Rect(topButtonsX + 332, panelY + 8, 148, 34), "一键自动布阵")) AutoArrangeByLockedComp();
-            if (GUI.Button(new Rect(topButtonsX + 332, panelY + panelH - 46, 148, 34), "开始战斗")) StartBattle();
-            GUI.Label(new Rect(topButtonsX, panelY + 46, 180, 20), lockShop ? "状态：已锁定商店" : "状态：商店未锁定");
-            GUI.Label(new Rect(topButtonsX + 188, panelY + 46, 190, 20), $"路线保底：{lockedCompMissStreak}/3");
+            if (DrawPrimaryActionButton(new Rect(topButtonsX + 330, panelY + 4, 178, 40), stageType == StageType.Shop ? "离开商店" : "开始战斗")) StartBattle();
+            DrawHudInfoStrip(new Rect(topButtonsX, panelY + 44, 206f, 22f), lockShop ? "商店状态：已锁定" : "商店状态：未锁定");
+            DrawHudInfoStrip(new Rect(topButtonsX + 214, panelY + 44, 128f, 22f), $"路线保底 {lockedCompMissStreak}/3", TextAnchor.MiddleCenter);
+            if (GUI.Button(new Rect(topButtonsX + 350, panelY + 42, 158, 26), "一键自动布阵")) AutoArrangeByLockedComp();
 
-            GUI.Label(new Rect(panelX + 16, panelY + 44, 240, 20), "商店");
+            GUI.Label(new Rect(panelX + 16, panelY + 76, 240, 20), "商店");
             for (int i = 0; i < shopOffers.Count; i++)
             {
                 var d = unitDefs[shopOffers[i]];
                 int col = i % shopCols;
-                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 62, shopW, shopH);
+                Rect r = new Rect(panelX + 16 + col * (shopW + shopGapX), panelY + 94, shopW, shopH);
                 if (CountOwnedCopies(d.key) > 0)
                 {
                     float pulse = 0.45f + 0.55f * Mathf.PingPong(Time.realtimeSinceStartup * 2.2f, 1f);
@@ -771,14 +914,14 @@ public partial class RoguelikeFramework
                 }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) BuyOffer(i);
             }
-            GUI.Label(new Rect(panelX + 16, panelY + 172, 120, 20), "备战席");
+            GUI.Label(new Rect(panelX + 16, panelY + 196, 120, 20), "备战席");
             for (int i = 0; i < 8; i++)
             {
                 float bx = panelX + 16 + i * (benchW + benchGap);
                 if (i < benchUnits.Count)
                 {
                     var u = benchUnits[i];
-                    Rect r = new Rect(bx, panelY + 194, benchW, benchH);
+                    Rect r = new Rect(bx, panelY + 214, benchW, benchH);
                     DrawUnitChipCard(r, u.def, u.star, u.def.cost, false);
                     if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                     {
@@ -799,14 +942,14 @@ public partial class RoguelikeFramework
                 int benIdx = benchUnits.FindIndex(u => u.id == inspectedUnit.id);
                 if (depIdx >= 0)
                 {
-                    if (GUI.Button(new Rect(topButtonsX, panelY + panelH - 46, 150, 34), "下场(备战席)"))
+                    if (GUI.Button(new Rect(topButtonsX, panelY + panelH - 56, 150, 38), "下场(备战席)"))
                     {
                         if (ReturnDeployToBench(depIdx)) RedrawPrepareBoard();
                     }
                 }
                 if (depIdx >= 0 || benIdx >= 0)
                 {
-                    if (GUI.Button(new Rect(topButtonsX + 160, panelY + panelH - 46, 150, 34), "出售选中"))
+                    if (GUI.Button(new Rect(topButtonsX + 160, panelY + panelH - 56, 150, 38), "出售选中"))
                     {
                         if (SellUnit(inspectedUnit)) RedrawPrepareBoard();
                     }
@@ -815,9 +958,10 @@ public partial class RoguelikeFramework
 
             float syH = compact ? 210f : 230f;
             float compY = 220f + syH + 8f;
-            float compH = Mathf.Max(170f, guiH - compY - 170f);
+            float foldedCompY = panelY - 64f;
+            float compH = showCompPanelFoldout ? Mathf.Max(150f, panelY - compY - 12f) : 52f;
             DrawSynergyClickPanel(rightX, 220, rightW, syH, deploySlots);
-            DrawCompPanel(rightX, compY, rightW, compH, deploySlots);
+            DrawCompPanel(rightX, showCompPanelFoldout ? compY : foldedCompY, rightW, compH, deploySlots);
         }
 
         if (state == RunState.Battle)

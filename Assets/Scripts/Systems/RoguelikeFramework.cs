@@ -6,14 +6,20 @@ using System.IO;
 public partial class RoguelikeFramework : MonoBehaviour
 {
     private enum RunState { Stage, Prepare, Battle, Hex, Reward, GameOver }
-    private enum StageType { Normal, Elite, Shop, Boss }
+    private enum StageType { Normal, Elite, Shop, Mystery, Treasure, Boss }
 
     private class StageNode
     {
+        public string id;
         public StageType type;
+        public StageType revealedType;
+        public bool mysteryRevealed;
         public int floor;
+        public int lane;
         public int power;
         public bool giveHex;
+        public bool cleared;
+        public readonly List<string> nextIds = new();
     }
 
     private class UnitDef

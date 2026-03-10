@@ -7,6 +7,9 @@ public partial class RoguelikeFramework
     private RunState state = RunState.Stage;
 
     private readonly List<StageNode> stages = new();
+    private readonly Dictionary<string, StageNode> stageNodeById = new();
+    private readonly List<string> availableStageNodeIds = new();
+    private string currentStageNodeId = "";
     private int stageIndex;
 
     private readonly Dictionary<string, UnitDef> unitDefs = new();

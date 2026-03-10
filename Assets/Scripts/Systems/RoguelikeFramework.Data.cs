@@ -73,19 +73,108 @@ public partial class RoguelikeFramework
     private void BuildLinearStages()
     {
         stages.Clear();
-        // 扩展为 12 关的平滑节奏曲线 (Stage B4 节奏重做)
-        stages.Add(new StageNode { floor = 1,  type = StageType.Normal, power = 1, giveHex = true });
-        stages.Add(new StageNode { floor = 2,  type = StageType.Normal, power = 2, giveHex = false });
-        stages.Add(new StageNode { floor = 3,  type = StageType.Elite,  power = 3, giveHex = true });
-        stages.Add(new StageNode { floor = 4,  type = StageType.Normal, power = 3, giveHex = false });
-        stages.Add(new StageNode { floor = 5,  type = StageType.Shop,   power = 3, giveHex = false });
-        stages.Add(new StageNode { floor = 6,  type = StageType.Normal, power = 4, giveHex = false });
-        stages.Add(new StageNode { floor = 7,  type = StageType.Elite,  power = 5, giveHex = true });
-        stages.Add(new StageNode { floor = 8,  type = StageType.Normal, power = 5, giveHex = false });
-        stages.Add(new StageNode { floor = 9,  type = StageType.Shop,   power = 6, giveHex = false });
-        stages.Add(new StageNode { floor = 10, type = StageType.Normal, power = 6, giveHex = false });
-        stages.Add(new StageNode { floor = 11, type = StageType.Elite,  power = 7, giveHex = true });
-        stages.Add(new StageNode { floor = 12, type = StageType.Boss,   power = 8, giveHex = true });
+        stageNodeById.Clear();
+        availableStageNodeIds.Clear();
+
+        StageNode AddStage(string id, int floor, int lane, StageType type, int power, bool giveHex)
+        {
+            var node = new StageNode
+            {
+                id = id,
+                floor = floor,
+                lane = lane,
+                type = type,
+                revealedType = type,
+                power = power,
+                giveHex = giveHex
+            };
+            stages.Add(node);
+            stageNodeById[id] = node;
+            return node;
+        }
+
+        void Link(string from, params string[] to)
+        {
+            if (!stageNodeById.TryGetValue(from, out var node)) return;
+            for (int i = 0; i < to.Length; i++)
+            {
+                if (!node.nextIds.Contains(to[i])) node.nextIds.Add(to[i]);
+            }
+        }
+
+        StageType[,] layout =
+        {
+            { StageType.Normal,   StageType.Normal,   StageType.Normal   },
+            { StageType.Shop,     StageType.Normal,   StageType.Mystery  },
+            { StageType.Elite,    StageType.Normal,   StageType.Treasure },
+            { StageType.Normal,   StageType.Shop,     StageType.Normal   },
+            { StageType.Mystery,  StageType.Normal,   StageType.Elite    },
+            { StageType.Shop,     StageType.Normal,   StageType.Mystery  },
+            { StageType.Elite,    StageType.Treasure, StageType.Normal   },
+            { StageType.Normal,   StageType.Shop,     StageType.Mystery  },
+            { StageType.Treasure, StageType.Elite,    StageType.Normal   }
+        };
+
+        int[,] power =
+        {
+            { 1, 1, 1 },
+            { 1, 2, 2 },
+            { 3, 3, 0 },
+            { 4, 1, 4 },
+            { 5, 5, 5 },
+            { 1, 6, 6 },
+            { 6, 0, 7 },
+            { 7, 1, 7 },
+            { 0, 8, 8 }
+        };
+
+        bool[,] giveHex =
+        {
+            { false, false, false },
+            { false, false, false },
+            { true,  false, false },
+            { false, false, false },
+            { false, false, true  },
+            { false, true,  false },
+            { true,  false, false },
+            { false, false, false },
+            { false, true,  false }
+        };
+
+        for (int floor = 1; floor <= 9; floor++)
+        {
+            for (int lane = 0; lane < 3; lane++)
+            {
+                AddStage($"f{floor}_{lane}", floor, lane, layout[floor - 1, lane], power[floor - 1, lane], giveHex[floor - 1, lane]);
+            }
+        }
+
+        AddStage("f10_boss", 10, 1, StageType.Boss, 10, true);
+
+        for (int floor = 1; floor < 9; floor++)
+        {
+            for (int lane = 0; lane < 3; lane++)
+            {
+                Link($"f{floor}_{lane}", $"f{floor + 1}_{lane}");
+            }
+        }
+
+        // 少量跨线，制造路线选择，但不做全互联
+        Link("f2_0", "f3_1");
+        Link("f3_2", "f4_1");
+        Link("f4_1", "f5_2");
+        Link("f5_0", "f6_1");
+        Link("f6_2", "f7_1");
+        Link("f7_1", "f8_0");
+        Link("f8_1", "f9_2");
+
+        Link("f9_0", "f10_boss");
+        Link("f9_1", "f10_boss");
+        Link("f9_2", "f10_boss");
+
+        availableStageNodeIds.Add("f1_0");
+        availableStageNodeIds.Add("f1_1");
+        availableStageNodeIds.Add("f1_2");
     }
 
 
@@ -287,6 +376,97 @@ public partial class RoguelikeFramework
             bonusReduction = 0.02f,
             bonusSpeed = 2
         });
+    }
+
+    private StageNode GetCurrentStageNode()
+    {
+        if (string.IsNullOrEmpty(currentStageNodeId)) return null;
+        stageNodeById.TryGetValue(currentStageNodeId, out var node);
+        return node;
+    }
+
+    private StageType GetEffectiveStageType(StageNode node)
+    {
+        if (node == null) return StageType.Normal;
+        return node.type == StageType.Mystery && node.mysteryRevealed ? node.revealedType : node.type;
+    }
+
+    private int GetFinalFloor()
+    {
+        int maxFloor = 1;
+        for (int i = 0; i < stages.Count; i++) maxFloor = Mathf.Max(maxFloor, stages[i].floor);
+        return maxFloor;
+    }
+
+    private List<StageNode> GetAvailableStageNodes()
+    {
+        var result = new List<StageNode>();
+        for (int i = 0; i < availableStageNodeIds.Count; i++)
+        {
+            if (stageNodeById.TryGetValue(availableStageNodeIds[i], out var node)) result.Add(node);
+        }
+        return result;
+    }
+
+    private void RevealMysteryNode(StageNode node)
+    {
+        if (node == null || node.type != StageType.Mystery || node.mysteryRevealed) return;
+
+        float roll = UnityEngine.Random.value;
+        if (roll < 0.42f) node.revealedType = StageType.Normal;
+        else if (roll < 0.58f) node.revealedType = StageType.Elite;
+        else if (roll < 0.79f) node.revealedType = StageType.Shop;
+        else node.revealedType = StageType.Treasure;
+        node.mysteryRevealed = true;
+    }
+
+    private void SelectStageNode(string nodeId)
+    {
+        if (!stageNodeById.TryGetValue(nodeId, out var node)) return;
+        currentStageNodeId = node.id;
+        stageIndex = Mathf.Max(0, node.floor - 1);
+        if (node.type == StageType.Mystery) RevealMysteryNode(node);
+
+        var effective = GetEffectiveStageType(node);
+        if (effective == StageType.Treasure)
+        {
+            pendingHexAfterReward = node.giveHex;
+            RollRewardOffers();
+            state = RunState.Reward;
+            battleLog = $"进入宝箱节点：第{node.floor}层";
+            return;
+        }
+
+        StartPreparationForCurrentStage();
+    }
+
+    private void AdvanceToStageMapFromCurrentNode()
+    {
+        var node = GetCurrentStageNode();
+        if (node == null)
+        {
+            state = RunState.GameOver;
+            return;
+        }
+
+        node.cleared = true;
+        availableStageNodeIds.Clear();
+        for (int i = 0; i < node.nextIds.Count; i++)
+        {
+            string nextId = node.nextIds[i];
+            if (stageNodeById.TryGetValue(nextId, out var next) && !next.cleared) availableStageNodeIds.Add(nextId);
+        }
+
+        currentStageNodeId = "";
+        if (availableStageNodeIds.Count == 0)
+        {
+            state = RunState.GameOver;
+            battleLog += " | 章节结束";
+            return;
+        }
+
+        state = RunState.Stage;
+        battleLog += " | 返回地图选择下一条路线";
     }
 
     private void BuildHexPool()
@@ -493,7 +673,7 @@ public partial class RoguelikeFramework
             return;
         }
 
-        StartPreparationForCurrentStage();
+        AdvanceToStageMapFromCurrentNode();
     }
 
     private string RollUnitKeyByCostRange(int minCost, int maxCost, bool preferComp)
