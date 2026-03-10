@@ -338,8 +338,10 @@ public partial class RoguelikeFramework : MonoBehaviour
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = "Unit";
             go.transform.position = GridToWorld(u.x, u.y);
-            go.transform.localScale = new Vector3(0.8f, 0.8f, 1);
             var r = go.GetComponent<Renderer>();
+            // 强化星级视觉(Stage B1)：高星棋子体型小幅变大
+            float starScale = 0.8f + (u.star - 1) * 0.12f;
+            go.transform.localScale = new Vector3(starScale, starScale, 1);
             r.material = CreateRuntimeMaterial(PickIcon(u), PickVariantTint(u));
 
             var hpBg = GameObject.CreatePrimitive(PrimitiveType.Quad);
