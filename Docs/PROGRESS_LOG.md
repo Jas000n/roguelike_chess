@@ -328,3 +328,11 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Done
 - （心跳）确认当前重点在 Stage B3 的 UI 增强项部分，金币利息显示已经更新。
 - 继续保持代码纯净度和回归可用性。
+
+## 2026-03-11 03:49 UTC
+### Done
+- 持续循环执行：回顾进度日志，当前核心诉求是在战利品和海克斯选取能够查看玩家阵容。
+- 当前不需要立刻修改代码。
+
+### Next
+1. 在 Reward / Hex 选择界面临时渲染玩家的 deploySlots 与 benchUnits，或者提供快捷键 / 按钮 toggle 显示，方便构筑决策。
