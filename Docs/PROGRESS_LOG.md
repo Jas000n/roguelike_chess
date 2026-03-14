@@ -1107,3 +1107,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续 C1：补齐新增单位对应的构筑推荐/阵容权重（compDefs focusClasses/focusOrigins 适配），让新单位更容易被策略命中。
 2. 观察新增单位后商店命中分布，必要时微调商店费用概率或路线偏置，避免新单位“入池但不被使用”。
+
+## 2026-03-14 11:20 EDT
+### Done
+- 推进 C1 配套：对新增单位做构筑推荐适配（`BuildCompDefs` 调整），提升“入池后被策略命中”的概率。
+- 调整内容：
+  - `control_battery` 的 `focusOrigins` 扩展加入 `Venom`、`Mist`（承接 `cannon_venom`、`horse_mist`）
+  - `holy_recovery` 的 `focusOrigins` 扩展加入 `Thunder`、`Frost`（承接 `cannon_mender`、`ele_frost`）
+  - 新增组合 `mist_clinic`（Medic + Controller），聚焦 `Mist/Thunder/Holy/Venom`
+- 目标：让新增 Medic/Controller 系单位在锁定路线与商店偏置中更可见，避免“定义存在但路径命中弱”。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c1_comp_tuning.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:84`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 继续 C1：补一轮“路线命中可观测日志”（按 comp 统计命中单位类别），用数据验证新单位是否真的被命中。
+2. 若命中仍偏低，微调 `GetLockedCompClassBiasByLevel` 或相关 origin 偏置，避免仅改 compDefs 文案层面而实际收益不足。

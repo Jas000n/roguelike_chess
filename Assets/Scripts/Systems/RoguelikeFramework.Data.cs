@@ -402,7 +402,7 @@ public partial class RoguelikeFramework
             name = "控场炮网",
             desc = "功能炮与输出炮混编，靠射程与持续压制赢回合",
             focusClasses = new[] { "Controller", "Artillery" },
-            focusOrigins = new[] { "Thunder", "Frost", "Blaze", "Wind" },
+            focusOrigins = new[] { "Thunder", "Frost", "Blaze", "Wind", "Venom", "Mist" },
             classA = "Controller",
             classB = "Artillery",
             needClass2A = 2,
@@ -417,7 +417,7 @@ public partial class RoguelikeFramework
             name = "圣愈护城",
             desc = "医者抬血线，守护者和先锋扛住前排",
             focusClasses = new[] { "Medic", "Guardian" },
-            focusOrigins = new[] { "Holy", "Mist", "Stone" },
+            focusOrigins = new[] { "Holy", "Mist", "Stone", "Thunder", "Frost" },
             classA = "Medic",
             classB = "Guardian",
             needClass2A = 2,
@@ -425,6 +425,21 @@ public partial class RoguelikeFramework
             bonusDmg = 0.05f,
             bonusReduction = 0.14f,
             bonusSpeed = 0
+        });
+        compDefs.Add(new CompDef
+        {
+            id = "mist_clinic",
+            name = "雾隐医阵",
+            desc = "医者与控场协同，边控边抬血线",
+            focusClasses = new[] { "Medic", "Controller" },
+            focusOrigins = new[] { "Mist", "Thunder", "Holy", "Venom" },
+            classA = "Medic",
+            classB = "Controller",
+            needClass2A = 2,
+            needClass2B = 2,
+            bonusDmg = 0.09f,
+            bonusReduction = 0.08f,
+            bonusSpeed = 1
         });
     }
 
