@@ -326,6 +326,7 @@ public partial class RoguelikeFramework
         framework.DevRunLockedCompHitProbeById("steel_reroll", 24);
         framework.DevRunLockedCompHitProbeById("control_battery", 24);
         framework.DevRunLockedCompHitProbeById("holy_recovery", 24);
+        framework.DevRunSpikeProbeScenarios();
         framework.DevRunUnitDefsIntegritySmokeTest();
 
         if (framework.devBatchFailCount > 0)
@@ -822,6 +823,65 @@ public partial class RoguelikeFramework
 
         Check("压测轮数执行", true, $"rounds={rounds}");
         Debug.Log($"[DEV][COMP_HIT_PROBE] pass={pass} fail={fail} rounds={rounds} comp={lockedCompId}");
+    }
+
+    private void DevRunSpikeProbeScenarios()
+    {
+        int pass = 0;
+        int fail = 0;
+
+        void Check(string name, bool ok, string detail)
+        {
+            if (ok) pass++;
+            else
+            {
+                fail++;
+                devBatchFailCount++;
+                Debug.Log($"[DEV][SPIKE_SCENARIO][FAIL] {name} | {detail}");
+            }
+        }
+
+        HexDef FindHex(string id)
+        {
+            for (int i = 0; i < hexPool.Count; i++) if (hexPool[i].id == id) return hexPool[i];
+            return null;
+        }
+
+        void RunScenario(string name, string hexId, params string[] unitKeys)
+        {
+            RestartRun();
+            DevQuickStartToPrepare();
+            Check($"{name}: 进入Prepare", state == RunState.Prepare, $"state={state}");
+            if (state != RunState.Prepare) return;
+
+            selectedHexes.Clear();
+            var h = FindHex(hexId);
+            if (h != null) selectedHexes.Add(h);
+            Check($"{name}: hex存在", h != null, $"hexId={hexId}");
+
+            deploySlots.Clear();
+            benchUnits.Clear();
+            for (int i = 0; i < unitKeys.Length; i++)
+            {
+                string key = unitKeys[i];
+                if (!unitDefs.ContainsKey(key)) continue;
+                var u = CreateUnit(key, true);
+                u.x = Mathf.Clamp(i, 0, 4);
+                u.y = i % 2 == 0 ? 1 : 2;
+                deploySlots.Add(u);
+            }
+
+            Check($"{name}: 上阵数量", deploySlots.Count >= 2, $"deploy={deploySlots.Count}");
+            StartBattle();
+            Check($"{name}: 可进战斗", state == RunState.Battle, $"state={state}");
+            if (state == RunState.Battle) EndBattle(true);
+        }
+
+        RunScenario("刺客契约", "assassin_contract", "guard_assassin", "guard_mist", "horse_nightmare");
+        RunScenario("炮火超频", "artillery_overclock", "cannon_missile", "cannon_sniper", "cannon_storm");
+        RunScenario("三军协同", "tri_service", "cannon_missile", "cannon_venom", "soldier_oracle");
+
+        Debug.Log($"[DEV][SPIKE_SCENARIO] pass={pass} fail={fail}");
     }
 
     private void DevRunUnitDefsIntegritySmokeTest()
@@ -1371,12 +1431,36 @@ public partial class RoguelikeFramework
             }
         }
 
+        DevLogHexSynergySpikeProbe();
         SpawnEnemiesForStage(st);
         ApplyAssassinAmbush();
 
         CreateViews(playerUnits, new Color(0.2f, 0.7f, 1f));
         CreateViews(enemyUnits, new Color(0.95f, 0.35f, 0.4f));
         RefreshViews();
+    }
+
+    private void DevLogHexSynergySpikeProbe()
+    {
+        int assassin = 0, artillery = 0, controller = 0, medic = 0;
+        for (int i = 0; i < playerUnits.Count; i++)
+        {
+            var u = playerUnits[i];
+            if (u == null || u.def == null) continue;
+            if (u.ClassTag == "Assassin") assassin++;
+            if (u.ClassTag == "Artillery") artillery++;
+            if (u.ClassTag == "Controller") controller++;
+            if (u.ClassTag == "Medic") medic++;
+        }
+
+        var tags = new List<string>();
+        if (HasHex("assassin_contract") && assassin >= 2) tags.Add($"assassin_contract+assassin({assassin})");
+        if (HasHex("artillery_overclock") && artillery >= 2) tags.Add($"artillery_overclock+artillery({artillery})");
+        if (HasHex("tri_service") && artillery >= 1 && controller >= 1 && medic >= 1)
+            tags.Add($"tri_service+A/C/M({artillery}/{controller}/{medic})");
+
+        if (tags.Count == 0) return;
+        Debug.Log($"[DEV][SPIKE_PROBE] floor={stageIndex + 1} tags={string.Join(";", tags)}");
     }
 
     private void SpawnEnemiesForStage(StageNode st)

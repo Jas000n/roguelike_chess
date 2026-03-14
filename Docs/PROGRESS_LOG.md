@@ -1242,3 +1242,35 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 若后续样本稳定，开始 C1 收口评估（单位规模/路线命中/门禁覆盖）并准备在 `DEV_LOOP.md` 标记 C1 完成。
 2. 预研 C2 入口：挑 1~2 组“高爆发羁绊×海克斯”组合做可观测试点（先日志验证再做平衡细调）。
+
+## 2026-03-14 13:51 EDT
+### Done
+- 完成上一轮 Next-2：落地 C2 预研“高爆发羁绊×海克斯”可观测试点，并接入 Batch。
+- 新增 `DevLogHexSynergySpikeProbe()`：
+  - 在 `StartBattle()` 开始阶段检测并输出组合触发日志：
+    - `assassin_contract + Assassin>=2`
+    - `artillery_overclock + Artillery>=2`
+    - `tri_service + Artillery/Controller/Medic 各>=1`
+  - 输出格式：`[DEV][SPIKE_PROBE] floor=<n> tags=<...>`
+- 新增 `DevRunSpikeProbeScenarios()` 并接入 `DevRunRegression3FloorsBatch()`：
+  - 场景1：刺客契约
+  - 场景2：炮火超频
+  - 场景3：三军协同
+  - 用于稳定复现并校验上述探针日志。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c2_spike_probe2.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][SPIKE_PROBE] floor=1 tags=assassin_contract+assassin(3)`
+  - `[DEV][SPIKE_PROBE] floor=1 tags=artillery_overclock+artillery(2)`
+  - `[DEV][SPIKE_PROBE] floor=1 tags=tri_service+A/C/M(1/1/1)`
+  - `[DEV][SPIKE_SCENARIO] pass=12 fail=0`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 在 C1 收口评估中纳入“多路线命中压测 + SPIKE_SCENARIO 全绿”作为质量门槛。
+2. 进入 C2 小步调参：为探针覆盖的三组组合设置轻量目标区间（例如触发频率/收益阈值），避免只看日志不看体验强度。
