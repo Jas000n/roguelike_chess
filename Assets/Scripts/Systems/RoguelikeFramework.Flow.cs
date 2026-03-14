@@ -224,6 +224,60 @@ public partial class RoguelikeFramework
         battleLog = $"[DEV] 跳关超时：state={state}, floor={stageIndex + 1}";
     }
 
+    // 开发开关：快速推进到 Boss 前的准备/战斗入口。
+    private void DevSkipToBoss()
+    {
+        int targetFloor = GetFinalFloor();
+        int safety = 160;
+
+        while (safety-- > 0 && state != RunState.GameOver)
+        {
+            if (stageIndex >= targetFloor - 1 && (state == RunState.Prepare || state == RunState.Battle || state == RunState.Reward || state == RunState.Hex))
+            {
+                battleLog = $"[DEV] 已推进至 Boss 层流程：floor={stageIndex + 1}, state={state}";
+                return;
+            }
+
+            switch (state)
+            {
+                case RunState.Stage:
+                    var choices = GetAvailableStageNodes();
+                    if (choices.Count == 0)
+                    {
+                        battleLog = "[DEV] 跳Boss失败：无可选节点";
+                        return;
+                    }
+
+                    StageNode best = choices[0];
+                    for (int i = 1; i < choices.Count; i++)
+                    {
+                        var c = choices[i];
+                        if (c.floor > best.floor || (c.floor == best.floor && c.power > best.power)) best = c;
+                    }
+                    SelectStageNode(best.id);
+                    break;
+                case RunState.Prepare:
+                    if (deploySlots.Count == 0) AutoDeployFallback();
+                    StartBattle();
+                    break;
+                case RunState.Battle:
+                    if (battleStarted) EndBattle(true);
+                    else StartBattle();
+                    break;
+                case RunState.Reward:
+                    if (currentRewardOffers.Count == 0) RollRewardOffers();
+                    PickReward(0);
+                    break;
+                case RunState.Hex:
+                    if (currentHexOffers.Count == 0) RollHexOffers();
+                    PickHex(0);
+                    break;
+            }
+        }
+
+        battleLog = $"[DEV] 跳Boss结束：floor={stageIndex + 1}, state={state}";
+    }
+
     private void RestartRun()
     {
         BuildLinearStages();
@@ -369,6 +423,11 @@ public partial class RoguelikeFramework
         Check("跳关可推进楼层", stageIndex > floorBeforeSkip, $"before={floorBeforeSkip}, after={stageIndex}, state={state}");
 
         if (state != RunState.Stage) RestartRun();
+
+        DevSkipToBoss();
+        Check("跳Boss可到后期流程", stageIndex >= GetFinalFloor() - 1 || state == RunState.GameOver, $"floor={stageIndex + 1}, final={GetFinalFloor()}, state={state}");
+
+        RestartRun();
 
         var firstChoices = GetAvailableStageNodes();
         if (firstChoices.Count > 0) SelectStageNode(firstChoices[0].id);

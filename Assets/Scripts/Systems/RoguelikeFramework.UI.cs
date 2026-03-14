@@ -787,6 +787,10 @@ public partial class RoguelikeFramework
             {
                 DevSkipCurrentFloor();
             }
+            if (GUI.Button(new Rect(centerX + 686f, 14 + topPad, 136, 28), "直达Boss(F11)"))
+            {
+                DevSkipToBoss();
+            }
             if (GUI.Button(new Rect(guiW - 126, 46 + topPad, 108, 28), "调试+999金"))
             {
                 gold += 999;

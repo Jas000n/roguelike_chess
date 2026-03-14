@@ -1011,3 +1011,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续 A3：补“快速跳至 Boss/指定层”开关（仅开发模式），进一步压缩后期验证时间。
 2. 为 A3 新开关补最小文档（键位 + 行为 + 安全边界），避免误用影响常规体验验证。
+
+## 2026-03-14 09:20 EDT
+### Done
+- 完成上一轮 Next-1：新增“直达 Boss”开发开关（仅开发用途）。
+- 新增方法：`DevSkipToBoss()`
+  - 在 Stage 状态下优先选择更高楼层/更高强度节点
+  - 自动处理 Prepare/Battle/Reward/Hex 链路（强制胜利）
+  - 目标是快速推进到 Boss 层流程入口，显著缩短后期验证耗时
+- 输入与 UI 接入：
+  - 热键：`F11`（直达 Boss）
+  - DevTools 按钮：`直达Boss(F11)`
+- 回归增强：UI 烟雾回归新增断言“跳Boss可到后期流程”。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_a3_boss_skip.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 为 A3 新开关补最小文档（键位 + 行为 + 安全边界），避免误用影响常规体验验证。
+2. 评估 A3 收口条件（快速开局/跳关/直达Boss/极速战斗 + 回归覆盖）并准备更新 `DEV_LOOP.md` 勾选状态。
