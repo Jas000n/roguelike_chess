@@ -1470,3 +1470,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续累计 warn-only 样本至 8~10 轮，再评估是否采用“累计 warn 次数阈值触发 soft-fail”。
 2. 并行准备 C3 最小骨架方案：事件房节点原型 + 回归断言（可进入/可结算/可返回主流程）。
+
+## 2026-03-14 17:49 EDT
+### Done
+- 完成上一轮 Next-1：将 warn-only 样本从 3 轮扩展到 8 轮（追加 sample_4~sample_8）。
+- 统计结果（8轮）：
+  - `SPIKE_SCENARIO` 全部 `pass=18 fail=0`
+  - `warn` 出现 3/8 轮（总计 3 条）
+  - 暂无连续高频告警，仍属“偶发偏低”区间
+- 输出了策略草案：`Docs/devloop/C2_WARN_POLICY_DRAFT.md`
+  - 建议先采用软门禁线：`10轮中 warn_runs>=5` 才触发 soft-fail（yellow）
+  - 连续 3 轮有 warn 仅触发调参提醒，不阻断提交
+
+### Verify
+- 新增样本日志：
+  - `Builds/build_devloop_cycle_c2_warn_sample_4.log` ... `_8.log`
+- 汇总（脚本统计）：
+  - samples=8
+  - warn_runs=3
+  - warn_total=3
+
+### Next
+1. 再补 2~4 轮样本，达到 10~12 轮后确认是否启用 soft-fail。
+2. 并行准备 C3 最小骨架方案：事件房节点原型 + 回归断言（可进入/可结算/可返回主流程）。
