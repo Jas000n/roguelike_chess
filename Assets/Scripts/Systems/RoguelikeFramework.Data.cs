@@ -49,6 +49,14 @@ public partial class RoguelikeFramework
         AddDef("soldier_zeal", "誓约兵", "兵", "Medic", "Holy", 2, 31, 8, 9, 2);
         AddDef("horse_lancer", "枪骑马", "马", "Rider", "Steel", 2, 35, 11, 11, 1);
 
+        // C1 扩展：补足冷门职业/阵营组合
+        AddDef("guard_chaplain", "战地牧士", "士", "Medic", "Holy", 4, 52, 9, 8, 3);
+        AddDef("cannon_mender", "修复炮", "炮", "Medic", "Thunder", 3, 38, 10, 8, 3);
+        AddDef("cannon_venom", "毒爆炮", "炮", "Controller", "Venom", 3, 30, 12, 8, 4);
+        AddDef("horse_mist", "迷雾驭手", "马", "Controller", "Mist", 2, 33, 9, 12, 2);
+        AddDef("ele_frost", "霜甲象", "象", "Guardian", "Frost", 4, 66, 9, 6, 1);
+        AddDef("soldier_oracle", "谕令兵", "兵", "Medic", "Mist", 2, 30, 8, 10, 2);
+
         foreach (var kv in unitDefs) basePool.Add(kv.Key);
     }
 

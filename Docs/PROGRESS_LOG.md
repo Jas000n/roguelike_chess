@@ -1081,3 +1081,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C1 主线推进：按职业/阵营缺口补一批新单位定义，优先填平冷门组合（Medic/Controller 与非主流 Origin）。
 2. 在单位扩充后继续用 `UNITDEF_SMOKE + UI_SMOKE + 3关回归` 做门禁，确保“扩内容不破流程”。
+
+## 2026-03-14 10:50 EDT
+### Done
+- 推进 Stage C1：扩充一批新单位定义，优先补充冷门职业/阵营组合（Medic/Controller + Mist/Venom/Frost/Thunder）。
+- 在 `BuildUnitDefs()` 新增 6 个单位：
+  - `guard_chaplain` 战地牧士（Medic/Holy）
+  - `cannon_mender` 修复炮（Medic/Thunder）
+  - `cannon_venom` 毒爆炮（Controller/Venom）
+  - `horse_mist` 迷雾驭手（Controller/Mist）
+  - `ele_frost` 霜甲象（Guardian/Frost）
+  - `soldier_oracle` 谕令兵（Medic/Mist）
+- 单位池规模从 31 提升到 37，继续保持 C1 的可构筑扩展方向。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c1_expand_units.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:85`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 继续 C1：补齐新增单位对应的构筑推荐/阵容权重（compDefs focusClasses/focusOrigins 适配），让新单位更容易被策略命中。
+2. 观察新增单位后商店命中分布，必要时微调商店费用概率或路线偏置，避免新单位“入池但不被使用”。
