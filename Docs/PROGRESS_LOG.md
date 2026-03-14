@@ -1493,3 +1493,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 再补 2~4 轮样本，达到 10~12 轮后确认是否启用 soft-fail。
 2. 并行准备 C3 最小骨架方案：事件房节点原型 + 回归断言（可进入/可结算/可返回主流程）。
+
+## 2026-03-14 18:20 EDT
+### Done
+- 完成上一轮 Next-1：补齐到 10 轮 warn-only 样本（新增 sample_9、sample_10）。
+- 10轮汇总：
+  - `warn_runs = 3/10`
+  - `warn_total = 3`
+  - 全部样本 `SPIKE_SCENARIO pass=18 fail=0` 且 `BATCH PASSED`
+- 基于草案继续推进：新增软门禁占位日志（暂不 fail）
+  - 在 Batch 中加入：若 `spikeScenarioWarnLast >= 2` 则输出
+    - `[DEV][SOFT_GATE_WARN] spike_warn=<n> (threshold=2)`
+  - 当前样本未触发该阈值。
+
+### Verify
+- 新增样本日志：
+  - `Builds/build_devloop_cycle_c2_warn_sample_9.log`
+  - `Builds/build_devloop_cycle_c2_warn_sample_10.log`
+- 汇总脚本统计：
+  - `samples=10, warn_runs=3, warn_total=3`
+- 关键日志（sample_9/10）：
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. warn 数据已到 10 轮且低于草案软门禁线（5/10），先保持 warn-only，继续观察周期样本。
+2. 开始 C3 最小骨架实现：先做 1 个事件房原型并接入可回归流程断言。

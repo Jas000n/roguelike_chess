@@ -327,6 +327,10 @@ public partial class RoguelikeFramework
         framework.DevRunLockedCompHitProbeById("control_battery", 24);
         framework.DevRunLockedCompHitProbeById("holy_recovery", 24);
         framework.DevRunSpikeProbeScenarios();
+        if (framework.spikeScenarioWarnLast >= 2)
+        {
+            Debug.LogWarning($"[DEV][SOFT_GATE_WARN] spike_warn={framework.spikeScenarioWarnLast} (threshold=2)");
+        }
         framework.DevRunUnitDefsIntegritySmokeTest();
 
         if (framework.devBatchFailCount > 0)
@@ -953,6 +957,7 @@ public partial class RoguelikeFramework
         Check("炮火超频探针命中", spikeProbeArtilleryOverclockHits > 0, $"hits={spikeProbeArtilleryOverclockHits}");
         Check("三军协同探针命中", spikeProbeTriServiceHits > 0, $"hits={spikeProbeTriServiceHits}");
 
+        spikeScenarioWarnLast = warn;
         Debug.Log($"[DEV][SPIKE_SCENARIO] pass={pass} fail={fail} warn={warn} probeHits=A:{spikeProbeAssassinContractHits},O:{spikeProbeArtilleryOverclockHits},T:{spikeProbeTriServiceHits}");
     }
 
