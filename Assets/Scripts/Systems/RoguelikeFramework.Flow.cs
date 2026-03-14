@@ -910,6 +910,18 @@ public partial class RoguelikeFramework
                 float share = totalDmg > 0 ? keyDmg / (float)totalDmg : 0f;
                 float killShare = totalKills > 0 ? keyKills / (float)totalKills : 0f;
                 Debug.Log($"[DEV][SPIKE_EFFECT] {name} turns={turns - 1} totalDmg={totalDmg} keyDmg={keyDmg} share={share:F2} totalKills={totalKills} keyKills={keyKills} killShare={killShare:F2}");
+
+                float targetShare = hexId switch
+                {
+                    "assassin_contract" => 0.45f,
+                    "artillery_overclock" => 0.35f,
+                    "tri_service" => 0.30f,
+                    _ => 0.30f
+                };
+                if (totalDmg > 0 && share < targetShare)
+                {
+                    Debug.LogWarning($"[DEV][SPIKE_WARN] {name} dmg share below target: {share:F2} < {targetShare:F2}");
+                }
                 if (totalDmg > 0)
                 {
                     Check($"{name}: 关键组合有输出", keyDmg > 0, $"total={totalDmg}, key={keyDmg}, share={share:F2}");

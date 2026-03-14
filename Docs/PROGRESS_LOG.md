@@ -1393,3 +1393,30 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 将 C1 收口标准沉淀到 `Docs/devloop`，把“单位规模+多路线命中+门禁全绿”固化为后续内容扩展模板。
 2. 继续 C2：为三组 spike 增加“收益目标区间”告警（warn-only），先观察一轮再决定是否升级为硬门禁。
+
+## 2026-03-14 16:20 EDT
+### Done
+- 完成上一轮两个 Next：
+  1) 新增 C1 收口标准文档：`Docs/devloop/C1_CLOSEOUT_CRITERIA.md`
+     - 固化门槛：单位规模、UNITDEF_SMOKE、多路线 COMP_HIT、Batch 总门禁
+  2) 为 C2 三组 spike 增加收益目标区间告警（warn-only）
+     - 在 `DevRunSpikeProbeScenarios()` 增加 `targetShare`（按组合）
+     - 当 `totalDmg > 0` 且 `share < targetShare` 时输出 `[DEV][SPIKE_WARN] ...`
+- 说明：该告警目前不计入 fail，仅用于观察收益偏低趋势，避免过早硬门禁导致开发摩擦。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c2_warn_targets.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][SPIKE_EFFECT] 刺客契约 turns=10 ... share=1.00`
+  - `[DEV][SPIKE_EFFECT] 炮火超频 turns=10 ... share=0.41`
+  - `[DEV][SPIKE_EFFECT] 三军协同 turns=10 ... share=0.00`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 probeHits=A:1,O:1,T:1`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 继续 C2：观察 3~5 轮 warn-only 样本后，决定是否把 `SPIKE_WARN` 升级为软门禁（例如累计 N 次低于阈值才 fail）。
+2. 若 C2 探针与收益指标稳定，再推进 C3（事件房/商店房/Boss机制差异化）的最小可测骨架。
