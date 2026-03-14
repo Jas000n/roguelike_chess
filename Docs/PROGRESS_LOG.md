@@ -1420,3 +1420,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续 C2：观察 3~5 轮 warn-only 样本后，决定是否把 `SPIKE_WARN` 升级为软门禁（例如累计 N 次低于阈值才 fail）。
 2. 若 C2 探针与收益指标稳定，再推进 C3（事件房/商店房/Boss机制差异化）的最小可测骨架。
+
+## 2026-03-14 16:50 EDT
+### Done
+- 继续 C2 的 warn-only 观测：为 `SPIKE_SCENARIO` 增加 `warn` 计数汇总，便于连续样本对比。
+- 代码改动：
+  - `DevRunSpikeProbeScenarios()` 增加 `warn` 计数器
+  - 当触发 `[DEV][SPIKE_WARN]` 时同步 `warn++`
+  - 汇总日志升级为：
+    - `[DEV][SPIKE_SCENARIO] pass=<x> fail=<y> warn=<z> probeHits=...`
+- 作用：后续可直接据 `warn` 趋势决定是否升级为软门禁，无需手工数日志行。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c2_warn_counter.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][SPIKE_EFFECT] 刺客契约 turns=10 ... share=1.00`
+  - `[DEV][SPIKE_EFFECT] 炮火超频 turns=10 ... share=0.40`
+  - `[DEV][SPIKE_EFFECT] 三军协同 turns=10 ... share=1.00`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 probeHits=A:1,O:1,T:1`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 再累计 2~4 轮 `warn` 样本（不同随机种子）确认稳定性，再决定是否升级为软门禁。
+2. 若稳定，准备进入 C3 的最小骨架（先做 1 个事件房原型 + 1 条可回归链路）。

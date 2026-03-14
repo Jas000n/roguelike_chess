@@ -829,6 +829,7 @@ public partial class RoguelikeFramework
     {
         int pass = 0;
         int fail = 0;
+        int warn = 0;
 
         void Check(string name, bool ok, string detail)
         {
@@ -920,6 +921,7 @@ public partial class RoguelikeFramework
                 };
                 if (totalDmg > 0 && share < targetShare)
                 {
+                    warn++;
                     Debug.LogWarning($"[DEV][SPIKE_WARN] {name} dmg share below target: {share:F2} < {targetShare:F2}");
                 }
                 if (totalDmg > 0)
@@ -951,7 +953,7 @@ public partial class RoguelikeFramework
         Check("炮火超频探针命中", spikeProbeArtilleryOverclockHits > 0, $"hits={spikeProbeArtilleryOverclockHits}");
         Check("三军协同探针命中", spikeProbeTriServiceHits > 0, $"hits={spikeProbeTriServiceHits}");
 
-        Debug.Log($"[DEV][SPIKE_SCENARIO] pass={pass} fail={fail} probeHits=A:{spikeProbeAssassinContractHits},O:{spikeProbeArtilleryOverclockHits},T:{spikeProbeTriServiceHits}");
+        Debug.Log($"[DEV][SPIKE_SCENARIO] pass={pass} fail={fail} warn={warn} probeHits=A:{spikeProbeAssassinContractHits},O:{spikeProbeArtilleryOverclockHits},T:{spikeProbeTriServiceHits}");
     }
 
     private void DevRunUnitDefsIntegritySmokeTest()
