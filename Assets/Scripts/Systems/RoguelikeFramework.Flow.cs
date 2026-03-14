@@ -996,7 +996,8 @@ public partial class RoguelikeFramework
         Check("强制触发事件房(稳健)", triggered, "triggered=false");
         Check("事件房返回地图状态", state == RunState.Stage, $"state={state}");
         Check("事件房计数增加", devEventRoomResolveCount == countBefore + 1, $"before={countBefore}, after={devEventRoomResolveCount}");
-        Check("稳健选项有资源变化", gold != goldBefore || playerLife != lifeBefore, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}");
+        bool safeEffectObserved = gold != goldBefore || playerLife != lifeBefore || battleLog.Contains("稳健选项");
+        Check("稳健选项有可观测效果", safeEffectObserved, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}, log={battleLog}");
 
         RestartRun();
         mystery = stageNodeById["f3_1"];

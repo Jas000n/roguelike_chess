@@ -1579,3 +1579,24 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3 继续：将“策略自动选择”升级为真实二选一 UI/状态（玩家可选），并保持当前 smoke 可覆盖两分支。
 2. C2 保持 warn-only 周期观察，必要时再启 soft-gate。
+
+## 2026-03-14 19:50 EDT
+### Done
+- 延续 C2 观察窗口：将 warn-only 样本从 10 轮扩展到 12 轮（追加 sample_11、sample_12）。
+- 本轮还修复了一个事件房 smoke 的偶发误判：
+  - 问题：稳健分支在满血时抽到“+5生命”会出现数值不变，导致“必须有资源变化”断言偶发失败。
+  - 修复：改为“有可观测效果”断言（资源变化 **或** battleLog 包含稳健选项文案）。
+- 修复后重新执行 sample_11/12，均通过。
+
+### Verify
+- 12轮汇总（sample_1 ~ sample_12）：
+  - `warn_runs = 4/12`
+  - `warn_total = 4`
+  - `all_passed = true`（全部 Batch 通过）
+- sample_11 / sample_12：
+  - `[DEV][SPIKE_SCENARIO] ... warn=0/1`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续保持 warn-only（当前 4/12，低于软门禁草案阈值），再观察后续样本趋势。
+2. C3：开始实现真实二选一 UI/状态流（非自动策略），并补“玩家选择分支”回归断言。
