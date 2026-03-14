@@ -166,6 +166,7 @@ public partial class RoguelikeFramework
         framework.Start();
         framework.DevRunRegression3Floors();
         framework.DevRunUiSmokeTest();
+        framework.DevRunStarMergeSmokeTest();
 
         Debug.Log("[DEV][BATCH] DevRunRegression3FloorsBatch finished");
     }
@@ -350,6 +351,58 @@ public partial class RoguelikeFramework
         {
             Debug.Log($"[DEV][UI_SMOKE] report write failed: {e.Message}");
         }
+    }
+
+    private void DevRunStarMergeSmokeTest()
+    {
+        int pass = 0;
+        int fail = 0;
+
+        void Check(string name, bool ok, string detail)
+        {
+            if (ok) pass++;
+            else
+            {
+                fail++;
+                Debug.Log($"[DEV][STAR_SMOKE][FAIL] {name} | {detail}");
+            }
+        }
+
+        RestartRun();
+
+        string key = shopOffers.Count > 0 ? shopOffers[0] : (basePool.Count > 0 ? basePool[0] : "");
+        if (string.IsNullOrEmpty(key) || !unitDefs.ContainsKey(key))
+        {
+            Debug.Log("[DEV][STAR_SMOKE] skipped: no valid unit key");
+            return;
+        }
+
+        benchUnits.Clear();
+        deploySlots.Clear();
+
+        for (int i = 0; i < 3; i++) benchUnits.Add(CreateUnit(key, true));
+        AutoMergeAll();
+
+        int oneStarAfterFirst = CountOwnedCopies(key, 1);
+        int twoStarAfterFirst = CountOwnedCopies(key, 2);
+        int threeStarAfterFirst = CountOwnedCopies(key, 3);
+
+        Check("3x1星可合成2星", oneStarAfterFirst == 0 && twoStarAfterFirst == 1 && threeStarAfterFirst == 0,
+            $"1★={oneStarAfterFirst},2★={twoStarAfterFirst},3★={threeStarAfterFirst}");
+
+        for (int i = 0; i < 6; i++) benchUnits.Add(CreateUnit(key, true));
+        AutoMergeAll();
+
+        int oneStarAfterSecond = CountOwnedCopies(key, 1);
+        int twoStarAfterSecond = CountOwnedCopies(key, 2);
+        int threeStarAfterSecond = CountOwnedCopies(key, 3);
+
+        Check("3x2星可合成3星", oneStarAfterSecond == 0 && twoStarAfterSecond == 0 && threeStarAfterSecond == 1,
+            $"1★={oneStarAfterSecond},2★={twoStarAfterSecond},3★={threeStarAfterSecond}");
+
+        string summary = $"[DEV][STAR_SMOKE] pass={pass} fail={fail} key={key}";
+        battleLog = summary;
+        Debug.Log(summary);
     }
 
     private void DevRunBalanceIterations(int rounds)

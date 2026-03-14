@@ -552,3 +552,25 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 1. 为 Batch 回归补充“失败即非零退出码”机制，方便 CI 接入。
 2. 增加一组 Stage B1 专项用例（1★→2★→3★ 连锁合成与商店池/已拥有3★过滤）。
 3. 继续推进 Stage B1 收口（升星链在高压回合下的稳定性与可读反馈）。
+
+## 2026-03-13 23:50 EST
+### Done
+- 新增 Stage B1 专项回归：`DevRunStarMergeSmokeTest()`，验证完整升星链路：
+  - 3 个 1★ 自动合成为 1 个 2★
+  - 再补 6 个 1★ 后自动链式合成为 1 个 3★
+- 将星级专项回归接入 Batch 总入口 `DevRunRegression3FloorsBatch()`，形成“流程回归 + UI烟雾 + 升星专项”组合回归。
+
+### Verify
+- Batch 回归结果：
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=13 fail=0`
+  - `[DEV][STAR_SMOKE] pass=2 fail=0 key=soldier_guard`
+  - `[DEV][BATCH] DevRunRegression3FloorsBatch finished`
+
+### Found / Risks
+- 升星专项当前仅覆盖“同 key 合成正确性”，尚未覆盖“混合阵容下锚点位置/上阵优先级”边界。
+
+### Next
+1. 增加“混合棋盘锚点”用例（场上+备战席同时存在时，升星后位置与归属稳定）。
+2. 增加“已有3★后商店过滤”专项断言，避免重复无效抽取回归。
+3. 继续 Stage B1 收口并准备标记完成条件。
