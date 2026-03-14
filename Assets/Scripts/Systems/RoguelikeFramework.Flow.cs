@@ -992,13 +992,27 @@ public partial class RoguelikeFramework
         int lifeBefore = playerLife;
         int countBefore = devEventRoomResolveCount;
 
-        bool triggered = TryResolveMysteryEventRoom(mystery, true);
-        Check("强制触发事件房", triggered, "triggered=false");
+        bool triggered = TryResolveMysteryEventRoom(mystery, true, false);
+        Check("强制触发事件房(稳健)", triggered, "triggered=false");
         Check("事件房返回地图状态", state == RunState.Stage, $"state={state}");
         Check("事件房计数增加", devEventRoomResolveCount == countBefore + 1, $"before={countBefore}, after={devEventRoomResolveCount}");
-        Check("事件房有资源变化", gold != goldBefore || playerLife != lifeBefore, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}");
+        Check("稳健选项有资源变化", gold != goldBefore || playerLife != lifeBefore, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}");
 
-        Debug.Log($"[DEV][EVENT_ROOM_SMOKE] pass={pass} fail={fail} gold:{goldBefore}->{gold} life:{lifeBefore}->{playerLife}");
+        RestartRun();
+        mystery = stageNodeById["f3_1"];
+        currentStageNodeId = mystery.id;
+        stageIndex = mystery.floor - 1;
+        goldBefore = gold;
+        lifeBefore = playerLife;
+        countBefore = devEventRoomResolveCount;
+
+        triggered = TryResolveMysteryEventRoom(mystery, true, true);
+        Check("强制触发事件房(冒险)", triggered, "triggered=false");
+        Check("冒险选项返回地图状态", state == RunState.Stage, $"state={state}");
+        Check("冒险选项计数增加", devEventRoomResolveCount == countBefore + 1, $"before={countBefore}, after={devEventRoomResolveCount}");
+        Check("冒险选项有资源变化", gold != goldBefore || playerLife != lifeBefore, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}");
+
+        Debug.Log($"[DEV][EVENT_ROOM_SMOKE] pass={pass} fail={fail} mode=both");
     }
 
     private void DevRunUnitDefsIntegritySmokeTest()

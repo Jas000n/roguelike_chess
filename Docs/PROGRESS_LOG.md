@@ -1550,3 +1550,32 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2 继续保持 warn-only 观察，若后续样本抬升再启用 soft-gate。
 2. C3 下一步：把事件房从“随机单次效果”扩展为“二选一交互原型”（收益 vs 风险），并补对应回归断言。
+
+## 2026-03-14 19:20 EDT
+### Done
+- 完成上一轮 Next-2：将事件房升级为“稳健/冒险”二选一交互原型（当前先用策略自动选择，接口已支持强制分支）。
+- 改动点：
+  - `TryResolveMysteryEventRoom` 增加重载：`(node, force, bool? riskyChoice)`
+  - 分支逻辑：
+    - 稳健：随机 +6 金币 或 +5 生命
+    - 冒险：生命 -3 金币 +12（低生命自动降级为 +4 金币）
+  - 默认策略（未指定 choice）：生命较高且金币较低时倾向冒险，其余倾向稳健
+  - 日志增强：`[DEV][EVENT_ROOM] ... risky=<true/false>`
+- 回归增强：`DevRunEventRoomPrototypeSmokeTest()` 现在强制覆盖两条路径（稳健 + 冒险），并断言均可触发/结算/回到 Stage。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_choice_proto.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 probeHits=A:1,O:1,T:1`
+  - `[DEV][EVENT_ROOM] floor=3 resolveCount=1 risky=False ... 稳健选项...`
+  - `[DEV][EVENT_ROOM] floor=3 resolveCount=2 risky=True ... 冒险选项...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C3 继续：将“策略自动选择”升级为真实二选一 UI/状态（玩家可选），并保持当前 smoke 可覆盖两分支。
+2. C2 保持 warn-only 周期观察，必要时再启 soft-gate。

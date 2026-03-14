@@ -509,39 +509,49 @@ public partial class RoguelikeFramework
 
     private bool TryResolveMysteryEventRoom(StageNode node, bool force)
     {
+        return TryResolveMysteryEventRoom(node, force, null);
+    }
+
+    private bool TryResolveMysteryEventRoom(StageNode node, bool force, bool? riskyChoice)
+    {
         if (node == null || node.type != StageType.Mystery) return false;
 
         bool trigger = force || UnityEngine.Random.value < 0.35f;
         if (!trigger) return false;
 
         devEventRoomResolveCount++;
-        int roll = UnityEngine.Random.Range(0, 3);
-        switch (roll)
+        bool chooseRisky = riskyChoice ?? (playerLife >= 16 && gold <= 20);
+
+        if (chooseRisky)
         {
-            case 0:
+            if (playerLife > 6)
+            {
+                playerLife = Mathf.Max(1, playerLife - 3);
+                gold += 12;
+                battleLog = $"奇遇[冒险选项]：黑市交易，生命 -3 金币 +12（第{node.floor}层）";
+            }
+            else
+            {
+                gold += 4;
+                battleLog = $"奇遇[冒险失败降级]：谨慎离场，获得 +4 金币（第{node.floor}层）";
+            }
+        }
+        else
+        {
+            int roll = UnityEngine.Random.Range(0, 2);
+            if (roll == 0)
+            {
                 gold += 6;
-                battleLog = $"奇遇：流浪商队赞助，获得 +6 金币（第{node.floor}层）";
-                break;
-            case 1:
+                battleLog = $"奇遇[稳健选项]：流浪商队赞助，获得 +6 金币（第{node.floor}层）";
+            }
+            else
+            {
                 playerLife = Mathf.Min(36, playerLife + 5);
-                battleLog = $"奇遇：战地祈福，恢复 +5 生命（第{node.floor}层）";
-                break;
-            default:
-                if (playerLife > 6)
-                {
-                    playerLife = Mathf.Max(1, playerLife - 3);
-                    gold += 12;
-                    battleLog = $"奇遇：黑市交易，生命 -3 金币 +12（第{node.floor}层）";
-                }
-                else
-                {
-                    gold += 4;
-                    battleLog = $"奇遇：谨慎离场，获得 +4 金币（第{node.floor}层）";
-                }
-                break;
+                battleLog = $"奇遇[稳健选项]：战地祈福，恢复 +5 生命（第{node.floor}层）";
+            }
         }
 
-        Debug.Log($"[DEV][EVENT_ROOM] floor={node.floor} resolveCount={devEventRoomResolveCount} log={battleLog}");
+        Debug.Log($"[DEV][EVENT_ROOM] floor={node.floor} resolveCount={devEventRoomResolveCount} risky={chooseRisky} log={battleLog}");
         AdvanceToStageMapFromCurrentNode();
         return true;
     }
