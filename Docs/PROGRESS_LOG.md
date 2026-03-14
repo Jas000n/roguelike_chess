@@ -625,3 +625,30 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 1. 补充 2★→3★ 锚点专项，确保高星合成同样保持场上落位稳定。
 2. 增加 Batch 失败汇总/退出码，降低 CI 集成摩擦。
 3. 继续 Stage B1 收口并评估“完整升星链”完成条件。
+
+## 2026-03-14 01:21 EST
+### Done
+- 新增 Stage B1 高星锚点专项：`DevRunMergeAnchorThreeStarSmokeTest()`。
+- 用例覆盖：
+  - 先构造 2 个 2★（其中一个放到场上锚点）
+  - 再补 3 个 1★ 触发 3x2★ -> 1x3★
+  - 断言 3★ 合成后仍保持场上锚点坐标
+- 接入 Batch 总回归入口，形成更完整的升星链稳定性验证（含 1★→2★ 与 2★→3★ 的锚点保持）。
+
+### Verify
+- Batch 关键日志：
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:92`
+  - `[DEV][UI_SMOKE] pass=13 fail=0`
+  - `[DEV][STAR_SMOKE] pass=2 fail=0 key=soldier_sword`
+  - `[DEV][SHOP_FILTER_SMOKE] pass=2 fail=0 key=soldier_sword`
+  - `[DEV][ANCHOR_SMOKE] pass=2 fail=0 key=soldier_phalanx`
+  - `[DEV][ANCHOR3_SMOKE] pass=3 fail=0 key=soldier_phalanx`
+  - `[DEV][BATCH] DevRunRegression3FloorsBatch finished`
+
+### Found / Risks
+- 升星链核心流程已具备多条专项回归保护；但 Batch 仍未输出统一失败码，CI 接入仍需手动解析日志。
+
+### Next
+1. 实装 Batch 回归失败汇总与退出码。
+2. 将 Stage B1 完整升星链在 `DEV_LOOP.md` 标记为完成（待退出码机制落地后）。
+3. 继续推进 Stage A2（轻量配置数据层）准备工作。

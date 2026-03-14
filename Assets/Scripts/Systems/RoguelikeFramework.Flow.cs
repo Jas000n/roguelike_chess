@@ -169,6 +169,7 @@ public partial class RoguelikeFramework
         framework.DevRunStarMergeSmokeTest();
         framework.DevRunThreeStarShopFilterSmokeTest();
         framework.DevRunMergeAnchorSmokeTest();
+        framework.DevRunMergeAnchorThreeStarSmokeTest();
 
         Debug.Log("[DEV][BATCH] DevRunRegression3FloorsBatch finished");
     }
@@ -515,6 +516,77 @@ public partial class RoguelikeFramework
             merged2 == null ? "no 2★ on board" : $"pos=({merged2.x},{merged2.y})");
 
         string summary = $"[DEV][ANCHOR_SMOKE] pass={pass} fail={fail} key={key}";
+        battleLog = summary;
+        Debug.Log(summary);
+    }
+
+    private void DevRunMergeAnchorThreeStarSmokeTest()
+    {
+        int pass = 0;
+        int fail = 0;
+
+        void Check(string name, bool ok, string detail)
+        {
+            if (ok) pass++;
+            else
+            {
+                fail++;
+                Debug.Log($"[DEV][ANCHOR3_SMOKE][FAIL] {name} | {detail}");
+            }
+        }
+
+        RestartRun();
+
+        string key = shopOffers.Count > 0 ? shopOffers[0] : (basePool.Count > 0 ? basePool[0] : "");
+        if (string.IsNullOrEmpty(key) || !unitDefs.ContainsKey(key))
+        {
+            Debug.Log("[DEV][ANCHOR3_SMOKE] skipped: no valid unit key");
+            return;
+        }
+
+        benchUnits.Clear();
+        deploySlots.Clear();
+
+        // 先造出两个2★：一个在场上锚点，一个在备战席。
+        for (int i = 0; i < 6; i++) benchUnits.Add(CreateUnit(key, true));
+        AutoMergeAll();
+
+        var twoStars = new List<Unit>();
+        for (int i = 0; i < benchUnits.Count; i++)
+        {
+            if (benchUnits[i].def.key == key && benchUnits[i].star == 2) twoStars.Add(benchUnits[i]);
+        }
+        Check("可生成两个2星", twoStars.Count >= 2, $"twoStars={twoStars.Count}");
+        if (twoStars.Count < 2)
+        {
+            Debug.Log($"[DEV][ANCHOR3_SMOKE] pass={pass} fail={fail} key={key}");
+            return;
+        }
+
+        var anchor2 = twoStars[0];
+        benchUnits.Remove(anchor2);
+        anchor2.x = 3;
+        anchor2.y = 2;
+        deploySlots.Add(anchor2);
+
+        // 补一个2★（由3个1★合成）形成 3x2★ -> 1x3★。
+        for (int i = 0; i < 3; i++) benchUnits.Add(CreateUnit(key, true));
+        AutoMergeAll();
+
+        int c1 = CountOwnedCopies(key, 1);
+        int c2 = CountOwnedCopies(key, 2);
+        int c3 = CountOwnedCopies(key, 3);
+        Check("3个2星可合成3星", c1 == 0 && c2 == 0 && c3 == 1, $"1★={c1},2★={c2},3★={c3}");
+
+        Unit merged3 = null;
+        for (int i = 0; i < deploySlots.Count; i++)
+        {
+            if (deploySlots[i].def.key == key && deploySlots[i].star == 3) { merged3 = deploySlots[i]; break; }
+        }
+        Check("3星合成后保持场上锚点坐标", merged3 != null && merged3.x == 3 && merged3.y == 2,
+            merged3 == null ? "no 3★ on board" : $"pos=({merged3.x},{merged3.y})");
+
+        string summary = $"[DEV][ANCHOR3_SMOKE] pass={pass} fail={fail} key={key}";
         battleLog = summary;
         Debug.Log(summary);
     }
