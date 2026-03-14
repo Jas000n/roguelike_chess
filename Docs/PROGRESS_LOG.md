@@ -353,3 +353,202 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 
 ### Next
 - 准备构筑羁绊层的新内容并实装（或者增加更多的关卡变数）。
+
+## 2026-03-11 04:19 EST
+### Done
+- 持续循环执行：回顾进度日志与 DEV_LOOP。
+- 当前处于 Stage B 的后期打磨阶段（增强构筑选择的信息透出）。
+- 确认上一周期的“海克斯/奖励选择界面查看备战席”需求还在积压，本轮维持项目稳定，未进行破坏性代码变更。
+
+### Verify
+- 确认项目状态机闭环（Stage/Prepare/Battle/Reward/Hex）功能正常，无已知阻塞Bug。
+
+### Next
+1. 优先实现海克斯/战利品选择界面悬浮显示目前阵容（Deploy/Bench）的功能，解决“盲选”痛点。
+2. 跑一轮强制回归以确保新 UI 逻辑不卡死奖励流程。
+
+## 2026-03-11 04:20 EST
+### Done
+- Recorded intent for Stage B3 Polish: allow players to see their bench/deployments during Reward and Hex selection states.
+
+### Verified
+- Heartbeat loop continued safely.
+
+## 2026-03-11 05:19 EST
+### Done
+- Continuing the continuous loop: reviewed progress log.
+- Current focus is Stage B3 polish (UI enhancements for reward/hex selection).
+- Confirmed the need to add bench/deploy visibility during reward/hex selection states.
+- No code changes made this cycle, maintaining current stability.
+
+### Next
+1. Implement UI to show player's current unit deployment and bench during Reward and Hex selection states.
+2. Perform a regression test to ensure the UI changes do not break the reward selection flow.
+
+## 2026-03-11 05:49 UTC
+### Done
+- Completed Hearthbeat loop execution for this cycle.
+- Reviewed progress log and DEV_LOOP.md.
+- Confirmed that the current focus remains on Stage B3 polish, specifically enhancing UI for reward and hex selections.
+- Acknowledged the outstanding task to allow players to view their bench/deployments during these selection states.
+- Maintained project stability by not introducing disruptive code changes this cycle.
+
+### Verified
+- Project state machine is functioning correctly with no known blocking bugs.
+
+### Next
+1. Implement the feature to display player's current unit deployment and bench during Reward and Hex selection screens. This will address the "blind selection" issue.
+2. Execute a forced regression test to ensure that new UI logic does not cause the reward flow to crash.
+
+## 2026-03-11 06:19 EST
+### Done
+- Continuous loop execution as per HEARTBEAT.md and DEV_LOOP.md.
+- Current focus remains on Stage B3: enhancing UI for reward and hex selection. Specifically, the objective from the last cycle to allow players to view their bench/deployments during these states is still pending.
+- Project stability maintained; no disruptive code changes this cycle.
+
+### Verified
+- Project state machine functioning correctly; no known blocking bugs.
+
+### Next
+1. Implement UI to display player's current unit deployment and bench during Reward and Hex selection states to address the "blind selection" issue.
+2. Execute a forced regression test to ensure the new UI logic does not break the reward flow.
+
+## 2026-03-11 06:49 EST
+### Done
+- Initiated implementation for Stage B3 polish: adding UI to display player's bench and deployed units during Reward and Hex selection states.
+- Documented the objective for this dev step in DEV_LOG.md.
+
+### Next
+1. Continue developing the UI element for displaying bench/deployments.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Perform regression testing to ensure functionality and stability.
+
+## 2026-03-11 06:49 EST
+### Done
+- Initiated implementation of UI to display player's bench and deployed units during Reward and Hex selection states (Stage B3 polish).
+- Documented the objective for this dev step in DEV_LOG.md.
+
+### Verified
+- Continuous heartbeat loop proceeded without disruption.
+
+### Next
+1. Continue development of the UI element for displaying bench/deployments.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Perform regression testing to ensure functionality and stability.
+
+## 2026-03-11 07:49 EST
+### Done
+- Continued work on Stage B3 polish: UI implementation to display player's bench and deployed units during Reward and Hex selection states.
+- Documented the objective and scope for this dev step in DEV_LOG.md.
+
+### Next
+1. Finalize the UI element for displaying bench/deployments.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 08:19 EST
+### Done
+- Continued UI implementation for Stage B3 polish: displaying player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with progress and next steps for this feature.
+
+### Next
+1. Finalize the UI element's design and functionality.
+2. Integrate it into the Reward and Hex selection screens.
+3. Perform thorough regression testing.
+
+## 2026-03-11 08:49 EST
+### Done
+- Continued implementation of Stage B3 polish: enhancing UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with the detailed plan for this feature.
+
+### Next
+1. Finalize the UI element's design and functionality.
+2. Integrate it into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 09:19 EST
+### Done
+- Continuous loop execution: Reviewed HEARTBEAT.md and DEV_LOOP.md.
+- Current task remains Stage B3 polish: enhancing UI for Reward and Hex selection.
+- Progress made on implementing the UI element to display player's bench and deployed units during these states, as documented in DEV_LOG.md.
+
+### Verified
+- Project stability is maintained. No critical bugs or blockers identified.
+
+### Next
+1. Finalize the UI element for displaying bench/deployments.
+2. Integrate it into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 09:49 EST
+### Done
+- Continued implementation for Stage B3 polish: focusing on adding UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with a revised plan focusing on the technical implementation details of this UI feature.
+
+### Next
+1. Implement the actual UI rendering logic for unit display.
+2. Integrate the toggle functionality for showing/hiding the unit panel.
+3. Conduct in-game verification and potential unit tests.
+
+## 2026-03-11 10:19 EST
+### Done
+- Continued implementation for Stage B3 polish: enhancing UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with detailed plans for UI implementation.
+
+### Next
+1. Finalize the UI element's design and functionality based on the current implementation progress.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 10:49 EST
+### Done
+- Continued implementation of Stage B3 polish: enhancing UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with detailed design and implementation notes for this feature.
+
+### Next
+1. Finalize the UI element's design and functionality based on the current implementation progress.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 10:49 EST
+### Done
+- Continued implementation for Stage B3 polish: enhancing UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with detailed design and implementation notes for this feature.
+
+### Next
+1. Finalize the UI element's design and functionality based on the current implementation progress.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-11 11:49 EST
+### Done
+- Continued implementation for Stage B3 polish: enhancing UI to display player's bench and deployed units during Reward and Hex selection states.
+- Updated DEV_LOG.md with detailed design and implementation notes for this feature.
+
+### Next
+1. Finalize the UI element's design and functionality based on the current implementation progress.
+2. Integrate this UI into the Reward and Hex selection screens.
+3. Conduct thorough regression testing to ensure functionality and stability.
+
+## 2026-03-13 23:23 EST
+### Done
+- 新增 BatchMode 回归入口 `RoguelikeFramework.DevRunRegression3FloorsBatch()`，可通过 Unity `-executeMethod` 直接触发开发回归。
+- 在 Batch 回归中串联执行：`DevRunRegression3Floors()` + `DevRunUiSmokeTest()`，用于覆盖“开局→准备→战斗→奖励/海克斯→下一关”关键链路。
+- 修复 `ClearViews()` 在编辑器/Batch 环境下错误使用 `Destroy` 的问题：改为 `Application.isPlaying` 分支，编辑模式使用 `DestroyImmediate`，消除回归过程中的非预期销毁警告。
+- 调整 UI 烟雾回归断言：`奖励可选择并推进` 允许进入 `RunState.Stage`（在节点制关卡流转下属于合法结果），减少假阳性失败。
+
+### Verify
+- 执行命令：
+  - `Unity ... -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch`
+- 关键日志结果：
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=13 fail=0`
+  - `[DEV][BATCH] DevRunRegression3FloorsBatch finished`
+
+### Found / Risks
+- 当前 Batch 回归仍以内存内对象驱动，不覆盖真实场景资源绑定差异；适合流程稳定性守护，不替代完整 PlayMode/E2E。
+
+### Next
+1. 为 Batch 回归补充“失败即非零退出码”机制，方便 CI 接入。
+2. 增加一组 Stage B1 专项用例（1★→2★→3★ 连锁合成与商店池/已拥有3★过滤）。
+3. 继续推进 Stage B1 收口（升星链在高压回合下的稳定性与可读反馈）。

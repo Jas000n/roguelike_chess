@@ -393,17 +393,32 @@ public partial class RoguelikeFramework : MonoBehaviour
 
     private void ClearViews()
     {
+        bool inPlay = Application.isPlaying;
         foreach (var v in views)
         {
-            if (v.go) Destroy(v.go);
-            if (v.hpBg) Destroy(v.hpBg);
-            if (v.hpFill) Destroy(v.hpFill);
+            if (v.go)
+            {
+                if (inPlay) Destroy(v.go);
+                else DestroyImmediate(v.go);
+            }
+            if (v.hpBg)
+            {
+                if (inPlay) Destroy(v.hpBg);
+                else DestroyImmediate(v.hpBg);
+            }
+            if (v.hpFill)
+            {
+                if (inPlay) Destroy(v.hpFill);
+                else DestroyImmediate(v.hpFill);
+            }
         }
         views.Clear();
 
         foreach (var c in GameObject.FindGameObjectsWithTag("Untagged"))
         {
-            if (c.name == "Cell") Destroy(c);
+            if (c.name != "Cell") continue;
+            if (inPlay) Destroy(c);
+            else DestroyImmediate(c);
         }
     }
 

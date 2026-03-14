@@ -157,6 +157,19 @@ public partial class RoguelikeFramework
         RedrawPrepareBoard();
     }
 
+    // BatchMode 入口：用于 Unity -executeMethod 回归，不依赖场景手动操作。
+    public static void DevRunRegression3FloorsBatch()
+    {
+        var go = new GameObject("DevRegressionRunner");
+        var framework = go.AddComponent<RoguelikeFramework>();
+
+        framework.Start();
+        framework.DevRunRegression3Floors();
+        framework.DevRunUiSmokeTest();
+
+        Debug.Log("[DEV][BATCH] DevRunRegression3FloorsBatch finished");
+    }
+
     // 最小自动回归：自动推进 3 关，校验核心状态机闭环不被改坏。
     private void DevRunRegression3Floors()
     {
@@ -313,7 +326,7 @@ public partial class RoguelikeFramework
         {
             int stageBefore = stageIndex;
             PickReward(0);
-            Check("奖励可选择并推进", state == RunState.Prepare || state == RunState.Hex || state == RunState.GameOver, $"state={state}, stageBefore={stageBefore}, stageNow={stageIndex}");
+            Check("奖励可选择并推进", state == RunState.Prepare || state == RunState.Hex || state == RunState.Stage || state == RunState.GameOver, $"state={state}, stageBefore={stageBefore}, stageNow={stageIndex}");
             if (state == RunState.Hex)
             {
                 PickHex(0);
