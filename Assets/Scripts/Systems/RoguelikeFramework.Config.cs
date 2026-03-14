@@ -72,10 +72,10 @@ public partial class RoguelikeFramework
 
     private float GetLockedCompClassBiasByLevel(int level)
     {
-        return level <= 3 ? 2.2f : level <= 5 ? 1.8f : 1.4f;
+        return level <= 3 ? 2.5f : level <= 5 ? 2.0f : 1.5f;
     }
 
-    private const float LockedCompOriginBias = 0.9f;
+    private const float LockedCompOriginBias = 1.1f;
     private const float Double4LowCostBonus = 0.5f;
     private const float LateGameHighCostBonus = 0.7f;
     private const float EarlyGameHighCostPenalty = 0.65f;

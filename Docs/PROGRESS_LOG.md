@@ -1184,3 +1184,31 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 基于 `COMP_HIT` 样本评估是否需要提高早期锁定路线权重（`GetLockedCompClassBiasByLevel` / `LockedCompOriginBias`）。
 2. 若调参，先做小步改动并比较调参前后 `avgClass/avgOrigin` 变化，避免过拟合单一路线。
+
+## 2026-03-14 12:49 EDT
+### Done
+- 完成上一轮 Next-1/2：基于 `COMP_HIT` 样本做一轮小步权重调参，并验证调参后命中提升。
+- 调整项（`RoguelikeFramework.Config.cs`）：
+  - `GetLockedCompClassBiasByLevel`：
+    - early: `2.2 -> 2.5`
+    - mid: `1.8 -> 2.0`
+    - late: `1.4 -> 1.5`
+  - `LockedCompOriginBias`：`0.9 -> 1.1`
+- 预期：在不破坏商店费用分布的前提下，提高锁定路线对 class/origin 的命中密度。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c1_bias_tune.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][COMP_HIT] comp=steel_reroll lv=1 window=6 avgClass=0.80 avgOrigin=0.80`
+  - `[DEV][COMP_HIT] comp=steel_reroll lv=1 window=6 avgClass=0.87 avgOrigin=0.87`
+  - `[DEV][COMP_HIT_PROBE] pass=2 fail=0 rounds=24 comp=steel_reroll`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 再跑 2~3 组 `COMP_HIT_PROBE`（不同推荐 comp）观察调参稳定性，避免只对单一路线有效。
+2. 若稳定，固化本轮偏置并准备 C1 收口评估（单位规模 + 路线命中 + 门禁全绿）。
