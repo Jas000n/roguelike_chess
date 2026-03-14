@@ -1212,3 +1212,33 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 再跑 2~3 组 `COMP_HIT_PROBE`（不同推荐 comp）观察调参稳定性，避免只对单一路线有效。
 2. 若稳定，固化本轮偏置并准备 C1 收口评估（单位规模 + 路线命中 + 门禁全绿）。
+
+## 2026-03-14 13:20 EDT
+### Done
+- 完成上一轮 Next-1：将 `COMP_HIT_PROBE` 扩展为多路线压测，并接入 Batch 固化。
+- `DevRunRegression3FloorsBatch()` 现在固定跑三组路线样本：
+  - `steel_reroll`（24轮）
+  - `control_battery`（24轮）
+  - `holy_recovery`（24轮）
+- 为支持上述能力，新增 `DevRunLockedCompHitProbeById(compId, rounds)`，可按指定路线直接压测（不依赖随机推荐）。
+- 基于样本发现 `holy_recovery` 的 class 命中偏低，做一处小步修正：
+  - `holy_recovery.focusClasses` 从 `{ Medic, Guardian }` 调整为 `{ Medic, Guardian, Vanguard }`
+  - 与其描述“守护者和先锋扛前排”保持一致。
+
+### Verify
+- Batch 回归（多路线压测）：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c1_multi_comp_probe_tune2.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:83`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `steel_reroll`：`avgClass` 约 `0.57~0.80`
+  - `control_battery`：`avgClass` 约 `0.53~0.80`
+  - `holy_recovery`：`avgClass` 提升到约 `0.63~0.80`（相较此前显著改善）
+  - `[DEV][COMP_HIT_PROBE] pass=2 fail=0 rounds=24`（三组均通过）
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 若后续样本稳定，开始 C1 收口评估（单位规模/路线命中/门禁覆盖）并准备在 `DEV_LOOP.md` 标记 C1 完成。
+2. 预研 C2 入口：挑 1~2 组“高爆发羁绊×海克斯”组合做可观测试点（先日志验证再做平衡细调）。

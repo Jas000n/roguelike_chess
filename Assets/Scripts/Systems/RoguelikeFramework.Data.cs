@@ -416,7 +416,7 @@ public partial class RoguelikeFramework
             id = "holy_recovery",
             name = "圣愈护城",
             desc = "医者抬血线，守护者和先锋扛住前排",
-            focusClasses = new[] { "Medic", "Guardian" },
+            focusClasses = new[] { "Medic", "Guardian", "Vanguard" },
             focusOrigins = new[] { "Holy", "Mist", "Stone", "Thunder", "Frost" },
             classA = "Medic",
             classB = "Guardian",

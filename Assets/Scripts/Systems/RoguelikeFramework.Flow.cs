@@ -323,7 +323,9 @@ public partial class RoguelikeFramework
         framework.DevRunThreeStarShopFilterSmokeTest();
         framework.DevRunMergeAnchorSmokeTest();
         framework.DevRunMergeAnchorThreeStarSmokeTest();
-        framework.DevRunLockedCompHitProbe(24);
+        framework.DevRunLockedCompHitProbeById("steel_reroll", 24);
+        framework.DevRunLockedCompHitProbeById("control_battery", 24);
+        framework.DevRunLockedCompHitProbeById("holy_recovery", 24);
         framework.DevRunUnitDefsIntegritySmokeTest();
 
         if (framework.devBatchFailCount > 0)
@@ -781,6 +783,16 @@ public partial class RoguelikeFramework
 
     private void DevRunLockedCompHitProbe(int refreshRounds)
     {
+        RestartRun();
+        var team = new List<Unit>();
+        team.AddRange(deploySlots);
+        team.AddRange(benchUnits);
+        RecommendCompByBoard(team);
+        DevRunLockedCompHitProbeById(lockedCompId, refreshRounds);
+    }
+
+    private void DevRunLockedCompHitProbeById(string compId, int refreshRounds)
+    {
         int pass = 0;
         int fail = 0;
 
@@ -796,19 +808,17 @@ public partial class RoguelikeFramework
         }
 
         RestartRun();
-        var team = new List<Unit>();
-        team.AddRange(deploySlots);
-        team.AddRange(benchUnits);
-        RecommendCompByBoard(team);
-
+        lockedCompId = compId;
         var lc = GetLockedComp();
         Check("锁定路线存在", lc != null, $"lockedCompId={lockedCompId}");
+        if (lc == null)
+        {
+            Debug.Log($"[DEV][COMP_HIT_PROBE] pass={pass} fail={fail} rounds=0 comp={compId}");
+            return;
+        }
 
         int rounds = Mathf.Clamp(refreshRounds, 6, 120);
-        for (int i = 0; i < rounds; i++)
-        {
-            RefreshShop(true);
-        }
+        for (int i = 0; i < rounds; i++) RefreshShop(true);
 
         Check("压测轮数执行", true, $"rounds={rounds}");
         Debug.Log($"[DEV][COMP_HIT_PROBE] pass={pass} fail={fail} rounds={rounds} comp={lockedCompId}");
