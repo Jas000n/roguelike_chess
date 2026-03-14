@@ -891,3 +891,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 新建默认 `ShopOddsConfigAsset` 资产文件（Resources 路径）并与当前常量对齐，验证 `shopOdds=scriptable-object` 路径。
 2. 在配置校验中追加 ScriptableObject 覆盖率检查（若启用资产模式，建议至少覆盖 1~8 级）。
+
+## 2026-03-14 06:50 EDT
+### Done
+- 完成上一轮 Next-1：落地默认 `ShopOddsConfigAsset` 资产并验证 SO 生效路径。
+- 新增编辑器引导脚本：`Assets/Scripts/Editor/DevConfigAssetBootstrap.cs`
+  - 提供 `DevConfigAssetBootstrap.EnsureShopOddsConfigAsset()`（支持 batch `-executeMethod`）
+  - 自动创建 `Assets/Resources/Configs/ShopOddsConfig.asset`
+  - 预填充 1~8 级商店费用概率（与当前常量配置一致）
+- 运行一次资产引导后，再跑 Batch 回归，确认配置来源从 fallback 切换为 `scriptable-object`。
+
+### Verify
+- 资产引导命令：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod DevConfigAssetBootstrap.EnsureShopOddsConfigAsset -logFile Builds/build_devloop_cycle_create_shopodds_asset.log`
+  - 关键日志：`[DEV][CONFIG_ASSET] ensured Assets/Resources/Configs/ShopOddsConfig.asset entries=8`
+- Batch 回归命令：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_so_shop_odds_asset_enabled.log`
+  - 关键日志：
+    - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+    - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+    - `[DEV][UI_SMOKE] pass=13 fail=0`
+    - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 在配置校验中追加 ScriptableObject 覆盖率检查（启用资产模式时要求覆盖 1~8 级，缺级则失败并回退常量）。
+2. 给 `ShopOddsConfigAsset` 增加 Inspector 友好提示（例如 level 排序/重复级别提示），降低误配概率。
