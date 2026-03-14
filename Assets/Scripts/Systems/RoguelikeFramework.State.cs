@@ -68,6 +68,9 @@ public partial class RoguelikeFramework
     private int lockedCompMissStreak;
     private bool lockShop;
     private int rerollEngineFreeUses;
+    private int compHitObsRefreshes;
+    private int compHitObsClassSlots;
+    private int compHitObsOriginSlots;
     private readonly HashSet<string> compMilestoneRewarded = new();
 
     private int draggingDeploy = -1;

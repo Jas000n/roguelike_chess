@@ -184,6 +184,42 @@ public partial class RoguelikeFramework
         shopOffers.Clear();
         for (int i = 0; i < 5; i++) shopOffers.Add(RollShopKeyByLevel());
         EnsureLockedCompShopPity();
+        ObserveLockedCompShopHit();
+    }
+
+    private void ObserveLockedCompShopHit()
+    {
+        var lc = GetLockedComp();
+        if (lc == null || shopOffers.Count == 0)
+        {
+            compHitObsRefreshes = 0;
+            compHitObsClassSlots = 0;
+            compHitObsOriginSlots = 0;
+            return;
+        }
+
+        int classHit = 0;
+        int originHit = 0;
+        for (int i = 0; i < shopOffers.Count; i++)
+        {
+            var d = unitDefs[shopOffers[i]];
+            for (int k = 0; k < lc.focusClasses.Length; k++) if (d.classTag == lc.focusClasses[k]) { classHit++; break; }
+            for (int k = 0; k < lc.focusOrigins.Length; k++) if (d.originTag == lc.focusOrigins[k]) { originHit++; break; }
+        }
+
+        compHitObsRefreshes++;
+        compHitObsClassSlots += classHit;
+        compHitObsOriginSlots += originHit;
+
+        if (compHitObsRefreshes < 6) return;
+
+        float avgClass = compHitObsClassSlots / (5f * compHitObsRefreshes);
+        float avgOrigin = compHitObsOriginSlots / (5f * compHitObsRefreshes);
+        Debug.Log($"[DEV][COMP_HIT] comp={lc.id} lv={playerLevel} window={compHitObsRefreshes} avgClass={avgClass:F2} avgOrigin={avgOrigin:F2}");
+
+        compHitObsRefreshes = 0;
+        compHitObsClassSlots = 0;
+        compHitObsOriginSlots = 0;
     }
 
     private void EnsureLockedCompShopPity()

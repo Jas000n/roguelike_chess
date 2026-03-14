@@ -1130,3 +1130,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续 C1：补一轮“路线命中可观测日志”（按 comp 统计命中单位类别），用数据验证新单位是否真的被命中。
 2. 若命中仍偏低，微调 `GetLockedCompClassBiasByLevel` 或相关 origin 偏置，避免仅改 compDefs 文案层面而实际收益不足。
+
+## 2026-03-14 11:50 EDT
+### Done
+- 完成上一轮 Next-1：补充“路线命中可观测日志”。
+- 在 `RoguelikeFramework.Economy.cs` 新增 `ObserveLockedCompShopHit()`：
+  - 在每次 `RefreshShop()` 后统计当前 5 格商店中：
+    - 命中锁定路线 `focusClasses` 的槽位数
+    - 命中锁定路线 `focusOrigins` 的槽位数
+  - 按 6 次刷新为一个窗口输出聚合日志：
+    - `[DEV][COMP_HIT] comp=<id> lv=<level> window=<n> avgClass=<x> avgOrigin=<y>`
+- 该统计只做观测，不改任何掉落逻辑，便于后续做偏置调参的数据依据。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c1_comp_observe.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=16 fail=0`
+  - `[DEV][UNITDEF_SMOKE] pass=299 fail=0 count=37`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 增加一个“锁定路线压测”开发入口（短轮数自动刷新并锁 comp），强制产出 `COMP_HIT` 样本，避免仅靠手工触发。
+2. 基于样本结果评估是否需要调整 `GetLockedCompClassBiasByLevel` / `LockedCompOriginBias` 的早中后期曲线。
