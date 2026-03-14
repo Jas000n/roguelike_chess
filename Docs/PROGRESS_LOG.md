@@ -1446,3 +1446,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 再累计 2~4 轮 `warn` 样本（不同随机种子）确认稳定性，再决定是否升级为软门禁。
 2. 若稳定，准备进入 C3 的最小骨架（先做 1 个事件房原型 + 1 条可回归链路）。
+
+## 2026-03-14 17:19 EDT
+### Done
+- 完成上一轮 Next-1：连续执行 3 轮 Batch 采样，观察 `SPIKE_WARN` 稳定性（不同随机样本）。
+- 采样结果：
+  - sample1: `warn=1`（炮火超频 `share=0.25 < 0.35`）
+  - sample2: `warn=0`
+  - sample3: `warn=0`
+  - 三轮均 `SPIKE_SCENARIO pass=18 fail=0`，且 `BATCH PASSED`
+- 结论：当前 warn-only 机制可稳定工作，且已能捕捉偶发偏低样本；暂不升级为硬 fail，先继续观察窗口。
+
+### Verify
+- 三轮命令（均通过）：
+  - `build_devloop_cycle_c2_warn_sample_1.log`
+  - `build_devloop_cycle_c2_warn_sample_2.log`
+  - `build_devloop_cycle_c2_warn_sample_3.log`
+- 关键观测：
+  - `sample1` 出现 `[DEV][SPIKE_WARN] 炮火超频 ... 0.25 < 0.35`
+  - `sample2/3` 无 warn
+  - 三轮均 `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 继续累计 warn-only 样本至 8~10 轮，再评估是否采用“累计 warn 次数阈值触发 soft-fail”。
+2. 并行准备 C3 最小骨架方案：事件房节点原型 + 回归断言（可进入/可结算/可返回主流程）。
