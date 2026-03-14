@@ -133,10 +133,12 @@ public partial class RoguelikeFramework : MonoBehaviour
         BuildRewardPool();
         if (!ValidateConfigData(out var configError))
         {
+            configValidationStatus = $"FAILED: {configError}";
             string msg = $"[DEV][CONFIG_VALIDATE] FAILED {configError}";
             Debug.LogError(msg);
             throw new InvalidOperationException(msg);
         }
+        configValidationStatus = "pass=1 fail=0";
         Debug.Log("[DEV][CONFIG_VALIDATE] pass=1 fail=0");
 
         LoadGeneratedUnitArt();

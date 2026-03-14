@@ -801,3 +801,24 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 将 `ValidateConfigData` 的错误明细前置到编辑器可视化入口（如 DevTools 面板）以便策划快速定位。
 2. 准备 A2 下一步：将配置描述迁移为 ScriptableObject 资产并保持现有 Batch 门禁。
+
+## 2026-03-14 04:50 EDT
+### Done
+- 完成上一轮 Next-1：把配置校验状态前置到 DevTools 面板可视化。
+- 新增运行态字段 `configValidationStatus`（默认 `not-run`），在 `Start()` 完成配置校验后写入：
+  - 通过：`pass=1 fail=0`
+  - 失败：`FAILED: <error>`（并继续抛异常中断启动）
+- `RoguelikeFramework.UI.cs` 的开发工具卡片新增 `Config:` 行，直接显示当前配置校验状态，便于策划/开发快速定位配置问题。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_config_status_ui.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0`
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:73`
+  - `[DEV][UI_SMOKE] pass=13 fail=0`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 推进 A2 下一步：抽出 ScriptableObject 配置资产骨架（先只接商店费用概率表），保持当前常量配置作为 fallback。
+2. 在 DevTools 中补一键“重新执行配置校验”按钮，便于运行中验证配置热改是否生效。

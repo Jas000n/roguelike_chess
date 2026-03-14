@@ -744,7 +744,7 @@ public partial class RoguelikeFramework
         }
             if (showDevTools)
             {
-            GUI.Box(new Rect(centerX, 12 + topPad, 300, 78), $"屏幕:{Screen.width}x{Screen.height}\nDPI:{Mathf.RoundToInt(Screen.dpi)}\nPath:{devPersistentPath}\nAutoRun:{devAutoRunStatus}");
+            GUI.Box(new Rect(centerX, 12 + topPad, 300, 96), $"屏幕:{Screen.width}x{Screen.height}\nDPI:{Mathf.RoundToInt(Screen.dpi)}\nPath:{devPersistentPath}\nAutoRun:{devAutoRunStatus}\nConfig:{configValidationStatus}");
             if (GUI.Button(new Rect(centerX + 310f, 14 + topPad, 118, 28), "开发推进一步"))
             {
                 DevAdvanceOneStep();
