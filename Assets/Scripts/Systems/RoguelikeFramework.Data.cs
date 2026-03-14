@@ -514,34 +514,11 @@ public partial class RoguelikeFramework
     private void BuildHexPool()
     {
         hexPool.Clear();
-        AddHex("rich", "金币雨", "蓝", "每回合准备阶段额外 +4 金币");
-        AddHex("interest_up", "理财大师", "蓝", "利息上限 +2");
-        AddHex("cannon_master", "炮火专精", "金", "炮系伤害 +25%，开局前3回合额外 +10%");
-        AddHex("rider_charge", "骑兵冲锋", "金", "骑兵速度 +2，首击额外 +8 伤害");
-        AddHex("vanguard_wall", "钢铁壁垒", "蓝", "先锋单位受到伤害 -18%");
-        AddHex("team_atk", "全军增幅", "白", "全队攻击 +2");
-        AddHex("artillery_range", "超远校准", "蓝", "炮系射程 +1");
-        AddHex("board_plus", "超载部署", "金", "上阵人数上限 +1");
-        AddHex("fast_train", "快速练兵", "白", "每回合额外 +2 经验");
-        AddHex("healing", "战备修复", "白", "每回合准备阶段，上阵棋子回复 20% 最大生命");
-        AddHex("lifesteal_core", "嗜血核心", "金", "全队造成伤害时回复该伤害的 12% 生命");
-        AddHex("execution_edge", "处决边缘", "蓝", "攻击低血目标时额外增伤，越残血越高");
-        AddHex("assassin_bloom", "刺影绽放", "金", "刺客暴击率+12%，首击额外伤害+8");
-        AddHex("assassin_contract", "暗影契约", "彩", "刺客暴击伤害提升，参与击杀时额外获得1金币");
-        AddHex("vanguard_bastion", "壁垒军令", "金", "先锋获得额外减伤与开战护盾");
-        AddHex("rider_relay", "连环冲阵", "蓝", "骑兵前8回合额外速度，首次命中后再次突进");
-        AddHex("artillery_overclock", "火控超频", "彩", "炮手额外伤害，第四次攻击附带溅射");
-        AddHex("stone_oath", "磐石誓约", "金", "石系单位生命与减伤提高");
-        AddHex("venom_payload", "毒蚀载荷", "金", "毒系命中附加持续伤害");
-        AddHex("windwalk", "疾风步", "蓝", "风系单位速度和闪避提高");
-        AddHex("reroll_engine", "精密改造", "彩", "每回合首次刷新免费，并额外获得1次刷新");
-        AddHex("triple_prep", "追三计划", "彩", "场上最高星级单位再获额外属性");
-        AddHex("royal_supply", "王庭军需", "彩", "准备阶段额外获得 6 金币，并在商店节点额外刷新 1 张海克斯奇物");
-        AddHex("assassin_gate", "影门突袭", "彩", "刺客开战切入后排时首次攻击额外造成 18 伤害并获得 25% 减伤");
-        AddHex("guardian_grace", "神佑守望", "金", "守护者与医者每回合首次行动时为最低生命友军回复生命");
-        AddHex("controller_net", "控场棋网", "金", "控场奇谋单位追加伤害提高，并获得额外射程");
-        AddHex("medic_banner", "回春军旗", "金", "医者治疗量提高，且被治疗单位获得短暂减伤");
-        AddHex("tri_service", "三军协同", "彩", "炮/控/医同时上阵时，全队获得额外伤害与续航");
+        var cfg = GetHexPoolConfig();
+        for (int i = 0; i < cfg.Length; i++)
+        {
+            AddHex(cfg[i].Id, cfg[i].Name, cfg[i].Rarity, cfg[i].Desc);
+        }
     }
 
     private void AddHex(string id, string name, string rarity, string desc)
@@ -552,23 +529,11 @@ public partial class RoguelikeFramework
     private void BuildRewardPool()
     {
         rewardPool.Clear();
-        rewardPool.Add(new RewardDef { id = "gold_big", name = "藏宝箱", desc = "立即获得 +10 金币" });
-        rewardPool.Add(new RewardDef { id = "gold_huge", name = "黄金密约", desc = "立即获得 +16 金币" });
-        rewardPool.Add(new RewardDef { id = "heal", name = "战地医疗", desc = "恢复 8 点生命" });
-        rewardPool.Add(new RewardDef { id = "heal_big", name = "再生矩阵", desc = "恢复 15 点生命" });
-        rewardPool.Add(new RewardDef { id = "exp", name = "战术复盘", desc = "获得 6 点经验" });
-        rewardPool.Add(new RewardDef { id = "exp_big", name = "大师课程", desc = "获得 10 点经验" });
-        rewardPool.Add(new RewardDef { id = "unit_low", name = "招募新兵", desc = "获得 1 个随机 1-3 费棋子" });
-        rewardPool.Add(new RewardDef { id = "unit_mid", name = "精锐补员", desc = "获得 1 个随机 2-4 费棋子（偏向当前路线）" });
-        rewardPool.Add(new RewardDef { id = "duo_pack", name = "双人补给", desc = "获得 2 个随机低费棋子" });
-        rewardPool.Add(new RewardDef { id = "reroll_pack", name = "补给券", desc = "免费刷新商店并额外 +2 金币" });
-        rewardPool.Add(new RewardDef { id = "board_bonus", name = "扩编令", desc = "本局上阵上限永久 +1" });
-        rewardPool.Add(new RewardDef { id = "star_up", name = "战地升星", desc = "随机提升 1 个我方棋子星级（最高3星）" });
-        rewardPool.Add(new RewardDef { id = "hex_random", name = "奇物箱", desc = "随机获得 1 个未拥有海克斯" });
-        // Stage B3 奖励深度：新增更多构筑向选项
-        rewardPool.Add(new RewardDef { id = "free_reroll_3", name = "补给连拨", desc = "接下来3回合，每回合首次刷新免费" });
-        rewardPool.Add(new RewardDef { id = "gold_interest", name = "对赌协议", desc = "获得10金币，但本局利息上限-1" });
-        rewardPool.Add(new RewardDef { id = "exp_burst", name = "极限阅历", desc = "获得等同于当前等级*3的经验值" });
+        var cfg = GetRewardPoolConfig();
+        for (int i = 0; i < cfg.Length; i++)
+        {
+            rewardPool.Add(new RewardDef { id = cfg[i].Id, name = cfg[i].Name, desc = cfg[i].Desc });
+        }
     }
 
     private void RollRewardOffers()

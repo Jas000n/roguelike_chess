@@ -750,3 +750,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. 继续 A2：把 `BuildHexPool` / `BuildRewardPool` 的定义数据迁移到配置描述结构（保留现有逻辑接口）。
 2. 预备 ScriptableObject 化路径，减少将来策划调参改代码的频率。
+
+## 2026-03-14 03:51 EST
+### Done
+- 继续 Stage A2：将 `BuildHexPool` 与 `BuildRewardPool` 的定义数据迁移到配置层。
+- 在 `RoguelikeFramework.Config.cs` 新增轻量配置描述结构：
+  - `HexConfigEntry` / `RewardConfigEntry`
+  - `HexPoolConfig[]` / `RewardPoolConfig[]`
+- `RoguelikeFramework.Data.cs` 改为从配置数组构建池：
+  - `BuildHexPool()` 通过 `GetHexPoolConfig()` 循环注入
+  - `BuildRewardPool()` 通过 `GetRewardPoolConfig()` 循环注入
+- 结果：奖励/海克斯条目定义从逻辑代码剥离，后续迁移 ScriptableObject/JSON 的改造面更小。
+
+### Verify
+- Batch 回归全绿：
+  - `[DEV] 3关回归通过 | 1->3 | steps:9 | life:36 gold:83`
+  - `[DEV][UI_SMOKE] pass=13 fail=0`
+  - `[DEV][STAR_SMOKE] pass=2 fail=0 key=soldier_guard`
+  - `[DEV][SHOP_FILTER_SMOKE] pass=2 fail=0 key=soldier_guard`
+  - `[DEV][ANCHOR_SMOKE] pass=2 fail=0 key=cannon_scout`
+  - `[DEV][ANCHOR3_SMOKE] pass=3 fail=0 key=cannon_scout`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. 为配置层补充“合法性校验”（重复 id、空字段、非法稀有度）并接入 Batch。
+2. 准备把配置描述升级为可资产化格式（ScriptableObject 首选）。
