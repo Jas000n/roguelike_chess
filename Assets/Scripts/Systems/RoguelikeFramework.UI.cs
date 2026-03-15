@@ -486,6 +486,19 @@ public partial class RoguelikeFramework
         return $"[其他] {evt}";
     }
 
+    private bool EventPassesFilter(string evt)
+    {
+        if (recentEventsFilterMode <= 0) return true;
+        string tagged = FormatEventForReview(evt);
+        return recentEventsFilterMode switch
+        {
+            1 => tagged.StartsWith("[事件]"),
+            2 => tagged.StartsWith("[战斗]"),
+            3 => tagged.StartsWith("[经济]"),
+            _ => true
+        };
+    }
+
     private void DrawHudInfoStrip(Rect rect, string text, TextAnchor align = TextAnchor.MiddleLeft)
     {
         Color old = GUI.color;
@@ -740,13 +753,33 @@ public partial class RoguelikeFramework
 
             if (showRecentEventsPanel)
             {
-                float panelH = Mathf.Min(268f, 58f + recentEvents.Count * 18f);
+                float panelH = Mathf.Min(288f, 78f + recentEvents.Count * 18f);
                 GUI.Box(new Rect(16, 226 + topPad, leftW, panelH), "事件回看（最近优先）");
-                int maxRows = Mathf.FloorToInt((panelH - 38f) / 18f);
-                for (int i = 0; i < recentEvents.Count && i < maxRows; i++)
+
+                string filterText = recentEventsFilterMode switch
+                {
+                    1 => "筛选:事件",
+                    2 => "筛选:战斗",
+                    3 => "筛选:经济",
+                    _ => "筛选:全部"
+                };
+                if (GUI.Button(new Rect(16 + leftW - 114, 250 + topPad, 104, 22), filterText))
+                {
+                    recentEventsFilterMode = (recentEventsFilterMode + 1) % 4;
+                }
+
+                int maxRows = Mathf.FloorToInt((panelH - 56f) / 18f);
+                int row = 0;
+                for (int i = 0; i < recentEvents.Count && row < maxRows; i++)
                 {
                     string evt = recentEvents[recentEvents.Count - 1 - i];
-                    GUI.Label(new Rect(26, 246 + topPad + i * 18, leftW - 20f, 18), FormatEventForReview(evt));
+                    if (!EventPassesFilter(evt)) continue;
+                    GUI.Label(new Rect(26, 266 + topPad + row * 18, leftW - 20f, 18), FormatEventForReview(evt));
+                    row++;
+                }
+                if (row == 0)
+                {
+                    GUI.Label(new Rect(26, 266 + topPad, leftW - 20f, 18), "无匹配事件");
                 }
             }
         }

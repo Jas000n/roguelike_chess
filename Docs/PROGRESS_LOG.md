@@ -1874,3 +1874,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 滚动观察，保持 warn-only，除非再次稳定抬升到触发线。
 2. C3：可进一步给回看面板加“仅事件/仅战斗/仅经济”过滤开关（若 UI 空间允许）。
+
+## 2026-03-15 01:50 EDT
+### Done
+- 完成上一轮 C3 Next-2：事件回看面板加入轻量筛选开关（循环切换）。
+- 功能细节：
+  - 新增过滤模式：`全部 / 事件 / 战斗 / 经济`
+  - 面板右上角按钮点击轮转筛选模式
+  - 无匹配时显示 `无匹配事件`
+- 代码层：
+  - 新增 `recentEventsFilterMode`
+  - 新增 `EventPassesFilter(evt)` 进行类别过滤
+  - 保持 `FormatEventForReview(evt)` 的标签体系一致
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_filter_panel.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 采样观察，保持 warn-only 策略。
+2. C3：若需要进一步提升可用性，可给筛选模式补图标或快捷键提示。
