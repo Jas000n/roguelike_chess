@@ -2374,3 +2374,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：再补 2~3 轮滚动样本，目标把 recent10 warn_runs 压到 ≤2（确认修正稳定）。
 2. C2：若持续回落，可将 artillery 定向调参标记为“验证通过”，准备转入 C3 持续打磨。
+
+## 2026-03-15 11:19 EDT
+### Done
+- 按 C2 计划继续滚动替换样本：追加 3 轮 post-fix batch 回归，验证 recent10 是否继续回落。
+- 结果：3 轮 `炮火超频` 全部 `warn=0`，share 分别为 `0.81 / 1.00 / 0.74`，明显高于当前 target(0.33)。
+- recent10 已进一步回落到：`warn_runs=1/10`，达到“≤2”的阶段目标。
+- short-window 保持稳定：`recent3 avg=0.00`、`recent5 avg=0.00`。
+
+### Verify
+- 回归日志：
+  - `Builds/build_devloop_cycle_c2_postfix_roll2_r1.log`
+  - `Builds/build_devloop_cycle_c2_postfix_roll2_r2.log`
+  - `Builds/build_devloop_cycle_c2_postfix_roll2_r3.log`
+- 关键行：
+  - 三轮均：`[DEV][SPIKE_SCENARIO] ... warn=0 warnByHex=A:0,O:0,T:0`
+  - 窗口回落：`[DEV][SPIKE_WARN_WINDOW] ... recent=10 warn_runs=1 warn_total=1 ...`
+  - 三轮均：`[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：`python3 Docs/devloop/c2_warn_summary.py`
+  - `[recent10] warn_runs=1 warn_total=1 gap=4`
+  - `tuning_hint: keep observe until dominant bucket has enough support`
+
+### Next
+1. C2：再观察 1~2 轮确认 `warn_runs<=2` 持续稳定。
+2. C2：若稳定延续，准备在 `DEV_LOOP.md` 将 C2 标记为“观测达标（可进入 C3 主线）”。
