@@ -905,17 +905,24 @@ public partial class RoguelikeFramework
                 : (gold <= 14 ? "建议：当前经济偏紧，可考虑冒险补经济。" : "建议：根据下回合强度选择，稳健保血/冒险抢经济。");
 
             GUI.Box(new Rect(16, 220, 760, 220), $"奇遇事件（第{floor}层）");
-            GUI.Label(new Rect(30, 254, 720, 50), "你遇到了一次事件选择：\n稳健收益更可控；冒险收益更高但需要承担生命代价。", wrapLabelStyle);
-            GUI.Label(new Rect(30, 296, 720, 20), suggest);
+            float pulse = 0.45f + 0.55f * Mathf.PingPong(Time.realtimeSinceStartup * 1.8f, 1f);
+            Color oc = GUI.color;
+            GUI.color = new Color(1f, 0.86f, 0.35f, 0.18f * pulse);
+            GUI.DrawTexture(new Rect(24, 248, 744, 24), Texture2D.whiteTexture);
+            GUI.color = oc;
+            GUI.Label(new Rect(30, 252, 720, 20), "事件抉择中：请在稳健与冒险之间选择一条路线");
 
-            GUI.Box(new Rect(30, 312, 340, 98), $"稳健选项\n金币 {safeGoldMin}~{safeGoldMax} / 生命 {safeLifeMin}~{safeLifeMax}");
-            if (GUI.Button(new Rect(120, 374, 160, 30), "选择稳健"))
+            GUI.Label(new Rect(30, 274, 720, 44), "你遇到了一次事件选择：\n稳健收益更可控；冒险收益更高但需要承担生命代价。", wrapLabelStyle);
+            GUI.Label(new Rect(30, 316, 720, 20), suggest);
+
+            GUI.Box(new Rect(30, 336, 340, 82), $"稳健选项（低波动）\n金币 {safeGoldMin}~{safeGoldMax} / 生命 {safeLifeMin}~{safeLifeMax}");
+            if (GUI.Button(new Rect(120, 392, 160, 24), "选择稳健"))
             {
                 ResolveMysteryEventChoice(false);
             }
 
-            GUI.Box(new Rect(406, 312, 340, 98), $"冒险选项\n金币 {gold}->{riskyGoldAfter} / 生命 {playerLife}->{riskyLifeAfter}");
-            if (GUI.Button(new Rect(496, 374, 160, 30), "选择冒险"))
+            GUI.Box(new Rect(406, 336, 340, 82), $"冒险选项（高收益）\n金币 {gold}->{riskyGoldAfter} / 生命 {playerLife}->{riskyLifeAfter}");
+            if (GUI.Button(new Rect(496, 392, 160, 24), "选择冒险"))
             {
                 ResolveMysteryEventChoice(true);
             }

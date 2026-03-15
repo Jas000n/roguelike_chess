@@ -1701,3 +1701,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续周期采样 warn-only，若 warn 比例抬升再启 soft-gate。
 2. C3：若要进一步强化反馈，可补轻量事件结果动效（例如短暂颜色闪烁/强调条），保持不影响主流程操作。
+
+## 2026-03-14 22:20 EDT
+### Done
+- 完成上一轮 C3 Next-2 的后续：在事件选择面板加入轻量视觉强调（不改逻辑）。
+- 视觉增强点：
+  - 事件标题区新增脉冲高亮条（`PingPong` alpha）
+  - 增加“事件抉择中”强调文案
+  - 选项文案改为“低波动/高收益”标签，提升决策可读性
+- 保持原则：仅 UI 反馈强化，不改数值与状态机行为。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_visual_feedback.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续周期采样 warn-only，若 warn 比例抬升再启 soft-gate。
+2. C3：考虑给事件结果增加短时颜色回显（成功偏绿/代价偏红）以强化后果感知。
