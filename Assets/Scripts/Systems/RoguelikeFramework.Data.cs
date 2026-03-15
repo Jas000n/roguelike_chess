@@ -580,6 +580,9 @@ public partial class RoguelikeFramework
 
         Debug.Log($"[DEV][EVENT_ROOM] floor={node.floor} resolveCount={devEventRoomResolveCount} risky={chooseRisky} log={battleLog}");
         PushEvent($"事件结果：{battleLog}");
+        eventResultToastText = chooseRisky ? "事件结果：冒险路线已结算" : "事件结果：稳健路线已结算";
+        eventResultToastColor = chooseRisky ? new Color(0.92f, 0.36f, 0.36f, 1f) : new Color(0.28f, 0.78f, 0.42f, 1f);
+        eventResultToastUntil = Time.realtimeSinceStartup + 2.4f;
         pendingEventNodeId = "";
         pendingEventFloor = 0;
         AdvanceToStageMapFromCurrentNode();

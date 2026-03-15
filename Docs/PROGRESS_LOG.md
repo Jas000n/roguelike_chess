@@ -1778,3 +1778,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：基于 recent10=5/10，先启用“soft-gate 提示升级”（保持不阻断），观察 3~5 轮后再决定是否升硬门禁。
 2. C3：继续事件结果反馈强化（可视化回显）并保持 smoke 全绿。
+
+## 2026-03-14 23:50 EDT
+### Done
+- 继续 C3 反馈强化：为事件结果增加短时颜色回显（toast 风格，不阻断操作）。
+- 实现：
+  - 新增运行态字段：`eventResultToastText / eventResultToastUntil / eventResultToastColor`
+  - 在 `ResolveMysteryEventChoice()` 结算后设置 toast：
+    - 稳健：绿色提示
+    - 冒险：红色提示
+  - 在 UI 主循环中渲染 2.4s 衰减高亮条 + 文案，强化“结果已生效”的感知
+- 设计约束：只增强反馈层，不改变事件数值逻辑与状态流。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_toast_visual.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=1 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 观察，按 soft-gate 提示策略跟踪 3~5 轮样本波动。
+2. C3：若继续强化，可在事件结算后补“一键回看最近事件”小面板入口，减少信息丢失。

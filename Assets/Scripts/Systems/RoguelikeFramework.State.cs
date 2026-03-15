@@ -78,6 +78,9 @@ public partial class RoguelikeFramework
     private int devEventRoomResolveCount;
     private string pendingEventNodeId = "";
     private int pendingEventFloor;
+    private string eventResultToastText = "";
+    private float eventResultToastUntil;
+    private Color eventResultToastColor = Color.white;
     private readonly HashSet<string> compMilestoneRewarded = new();
 
     private int draggingDeploy = -1;

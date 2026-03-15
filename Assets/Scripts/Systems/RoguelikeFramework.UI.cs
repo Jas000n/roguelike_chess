@@ -1246,6 +1246,17 @@ public partial class RoguelikeFramework
             GUI.Label(new Rect(r.x + 8, r.y + 9, r.width - 14, 20), dragText);
         }
 
+        if (!string.IsNullOrEmpty(eventResultToastText) && Time.realtimeSinceStartup <= eventResultToastUntil)
+        {
+            float remain = Mathf.Clamp01((eventResultToastUntil - Time.realtimeSinceStartup) / 2.4f);
+            Color oc = GUI.color;
+            GUI.color = new Color(eventResultToastColor.r, eventResultToastColor.g, eventResultToastColor.b, 0.18f + 0.42f * remain);
+            GUI.DrawTexture(new Rect(18, 182 + topPad, 420, 28), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(26, 186 + topPad, 404, 20), eventResultToastText);
+            GUI.color = oc;
+        }
+
         DrawFloatingTooltip();
 
         GUI.skin.box = oldBox;
