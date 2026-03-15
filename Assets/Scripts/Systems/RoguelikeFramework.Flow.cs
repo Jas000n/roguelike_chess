@@ -1661,7 +1661,17 @@ public partial class RoguelikeFramework
             }
         }
         else if (effectiveType == StageType.Elite)
+        {
             PushEvent($"节点情报：第{st.floor}层为精英节点（建议补前排与控制）");
+            int benchDepth = benchUnits.Count;
+            int frontline = 0;
+            for (int i = 0; i < deploySlots.Count; i++)
+            {
+                var u = deploySlots[i];
+                if (u != null && (u.ClassTag == "Vanguard" || u.ClassTag == "Soldier")) frontline++;
+            }
+            PushEvent($"精英前状态：前排{frontline} / 备战席{benchDepth}，建议保留控制与续航单位");
+        }
         else if (effectiveType == StageType.Boss)
         {
             PushEvent($"节点情报：第{st.floor}层为Boss节点（建议保留关键经济与刷新）");

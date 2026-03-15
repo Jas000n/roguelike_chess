@@ -2681,3 +2681,28 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：继续保持低风险信息增强，下一轮可为 Elite 节点补“威胁摘要”事件提示。
 2. 维持每轮全链路回归，确保 C2/C3 观测持续稳定。
+
+## 2026-03-15 18:01 EDT
+### Done
+- 继续 Stage C3（低风险信息差异化）：为 Elite 节点新增“战前状态快照”事件提示，与 Boss 提示风格保持一致。
+- 代码改动（`RoguelikeFramework.Flow.cs` / `StartPreparationForCurrentStage`）：
+  - 在 Elite 节点除基础提示外新增：
+    - `精英前状态：前排X / 备战席Y，建议保留控制与续航单位`
+  - 前排统计口径：`Vanguard` + `Soldier`。
+- 目的：在精英节点前给出可执行的阵容密度提示，帮助玩家快速判断是否需要补前排或留替补。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_elite_prestat_hint.log`
+- 关键日志：
+  - `[DEV][SPIKE_WARN_WINDOW] samples=43 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本复核：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 继续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` → direction_check 继续 PASS。
+
+### Next
+1. C3：继续保持事件流信息完善，下一轮可补“Treasure 节点收益预告”提示。
+2. 持续全链路回归，确保 C2/C3 稳定性不回退。
