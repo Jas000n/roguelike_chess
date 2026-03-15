@@ -1997,3 +1997,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 采样观察，保持 warn-only 策略。
 2. C3：如需继续打磨，可将 hover 提示替换为更统一的 tooltip 组件样式。
+
+## 2026-03-15 04:20 EDT
+### Done
+- 执行 C2（羁绊/海克斯组合爆发点）可观测性增强：把 `SPIKE_WARN` 采样从“单次日志”升级为“滚动窗口日志”。
+- 代码改动（`RoguelikeFramework.Flow.cs`）：
+  - 在 `DevRunRegression3FloorsBatch()` 中，`DevRunSpikeProbeScenarios()` 后新增 `DevRecordSpikeWarnSample()`。
+  - 新增 `DevRecordSpikeWarnSample()`：
+    - 将每轮 `spikeScenarioWarnLast` 追加写入 `Docs/devloop/spike_warn_history.csv`（时间戳,warn）。
+    - 自动统计 recent10 的 `warn_runs / warn_total`。
+    - 按草案规则输出判定：
+      - `recent10 warn_runs >= 5` → `[DEV][SPIKE_WARN_SOFT_GATE]`（建议 CI yellow）
+      - 连续 3 次 `warn>0` → `[DEV][SPIKE_WARN_TUNE_HINT]`（建议小步调参）
+    - 常规输出窗口摘要日志：`[DEV][SPIKE_WARN_WINDOW] ...`。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c2_warn_window.log`
+- 关键日志：
+  - `[DEV][SPIKE_SCENARIO] pass=19 fail=0 warn=0 probeHits=A:1,O:1,T:1`
+  - `[DEV][SPIKE_WARN_WINDOW] samples=1 recent=1 warn_runs=0 warn_total=0 soft_gate=0 tune_hint=0`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续积累 `spike_warn_history.csv` 到 recent10 窗口，再据 `warn_runs` 判定是否进入 soft-gate。
+2. C3：若继续打磨事件回看，可做统一 tooltip 样式收敛（视觉一致性）。

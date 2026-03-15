@@ -346,6 +346,7 @@ public partial class RoguelikeFramework
         {
             Debug.LogWarning($"[DEV][SOFT_GATE_WARN] spike_warn={framework.spikeScenarioWarnLast} (threshold=2)");
         }
+        framework.DevRecordSpikeWarnSample();
         framework.DevRunEventRoomPrototypeSmokeTest();
         framework.DevRunUnitDefsIntegritySmokeTest();
 
@@ -358,6 +359,69 @@ public partial class RoguelikeFramework
 
         Debug.Log("[DEV][BATCH] PASSED failCount=0");
         Debug.Log("[DEV][BATCH] DevRunRegression3FloorsBatch finished");
+    }
+
+    private void DevRecordSpikeWarnSample()
+    {
+        try
+        {
+            string projectRoot = Path.GetDirectoryName(Application.dataPath) ?? ".";
+            string dir = Path.Combine(projectRoot, "Docs", "devloop");
+            Directory.CreateDirectory(dir);
+            string path = Path.Combine(dir, "spike_warn_history.csv");
+
+            string ts = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string line = $"{ts},{spikeScenarioWarnLast}";
+            File.AppendAllText(path, line + Environment.NewLine);
+
+            var warns = new List<int>();
+            string[] lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string raw = lines[i];
+                if (string.IsNullOrWhiteSpace(raw)) continue;
+                string[] parts = raw.Split(',');
+                if (parts.Length < 2) continue;
+                if (int.TryParse(parts[1], out int w)) warns.Add(Mathf.Max(0, w));
+            }
+
+            int count = warns.Count;
+            int from = Mathf.Max(0, count - 10);
+            int recentCount = count - from;
+            int recentWarnRuns = 0;
+            int recentWarnTotal = 0;
+            int consecutiveWarnRuns = 0;
+            for (int i = from; i < count; i++)
+            {
+                int w = warns[i];
+                if (w > 0)
+                {
+                    recentWarnRuns++;
+                    consecutiveWarnRuns++;
+                    recentWarnTotal += w;
+                }
+                else
+                {
+                    consecutiveWarnRuns = 0;
+                }
+            }
+
+            bool softGate = recentWarnRuns >= 5;
+            bool tuneHint = consecutiveWarnRuns >= 3;
+            Debug.Log($"[DEV][SPIKE_WARN_WINDOW] samples={count} recent={recentCount} warn_runs={recentWarnRuns} warn_total={recentWarnTotal} soft_gate={(softGate ? 1 : 0)} tune_hint={(tuneHint ? 1 : 0)}");
+            if (softGate)
+            {
+                Debug.LogWarning("[DEV][SPIKE_WARN_SOFT_GATE] recent10 warn_runs >= 5, recommend CI yellow");
+            }
+            else if (tuneHint)
+            {
+                Debug.LogWarning("[DEV][SPIKE_WARN_TUNE_HINT] consecutive warn runs >= 3, recommend small bias tuning");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log($"[DEV][SPIKE_WARN_WINDOW] report write failed: {e.Message}");
+        }
     }
 
     // 最小自动回归：自动推进 3 关，校验核心状态机闭环不被改坏。
