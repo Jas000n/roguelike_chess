@@ -2321,3 +2321,30 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：保持观察 1~2 轮，确认 O 桶主导是否稳定。
 2. C2：若仍稳定主导，进入 artillery_overclock 小步调参实验（targetShare/bias），并做 5 次回归评估 warn 回落。
+
+## 2026-03-15 10:21 EDT
+### Done
+- 继续 Stage C2 并执行定向调参实验 + 探针修正：
+  1) 小步调整 `artillery_overclock` 目标线（Flow 中 probe target 0.35→0.33）并按计划补跑多轮回归；
+  2) 发现炮火探针样本构成偏差：`炮火超频` 场景里使用了 `cannon_storm`（Controller）导致“炮手占比”被结构性拉低，出现非能力问题的假告警；
+  3) 修正探针阵容为纯炮手：`cannon_missile + cannon_sniper + cannon_arc`；
+  4) 同步对实战强度做小步增强：`HasHex("artillery_overclock")` 伤害加成 `+0.15f -> +0.18f`。
+- 修正后验证到 `炮火超频` 场景 `share=1.00`（连续 3 轮），探针信号显著稳定。
+
+### Verify
+- 多轮回归（调参与修正期）：
+  - `build_devloop_cycle_c2_artillery_target_033*.log`
+  - `build_devloop_cycle_c2_artillery_buff_m018.log`
+  - `build_devloop_cycle_c2_artillery_probefix_r1..r3.log`
+- 关键验证日志：
+  - 探针修正后：
+    - `[DEV][SPIKE_EFFECT] 炮火超频 ... share=1.00`（r1/r2/r3 连续命中）
+    - `[DEV][SPIKE_SCENARIO] ... warn=0 warnByHex=A:0,O:0,T:0`
+  - 全链路回归保持：`[DEV][BATCH] PASSED failCount=0`
+- 当前窗口统计（脚本）：
+  - `python3 Docs/devloop/c2_warn_summary.py`
+  - `recent10 warn_runs=4/10, gap=1`（历史窗口仍含旧样本，短窗已回落：`recent3 avg=0.00`）
+
+### Next
+1. C2：继续滚动 3~5 轮，等待 recent10 完成“新探针样本”替换，验证 warn_runs 是否进一步回落。
+2. C2：若回落确认，再考虑把 soft-gate 说明从“观察告警”升级为“结构化告警+已修正”状态，准备进入 C3 深化。

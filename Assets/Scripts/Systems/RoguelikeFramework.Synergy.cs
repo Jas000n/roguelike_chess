@@ -487,7 +487,7 @@ public partial class RoguelikeFramework
             if (art >= 2) m += 0.12f;
             if (art >= 4) m += 0.22f;
             if (HasHex("cannon_master")) m += 0.25f;
-            if (HasHex("artillery_overclock")) m += 0.15f;
+            if (HasHex("artillery_overclock")) m += 0.18f;
         }
         int ctrl = CountClass(team, "Controller");
         if (from.ClassTag == "Controller")

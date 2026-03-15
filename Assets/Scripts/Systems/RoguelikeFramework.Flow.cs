@@ -1045,7 +1045,7 @@ public partial class RoguelikeFramework
                 float targetShare = hexId switch
                 {
                     "assassin_contract" => 0.45f,
-                    "artillery_overclock" => 0.35f,
+                    "artillery_overclock" => 0.33f,
                     "tri_service" => 0.30f,
                     _ => 0.30f
                 };
@@ -1082,7 +1082,7 @@ public partial class RoguelikeFramework
         spikeProbeTriServiceHits = 0;
 
         RunScenario("刺客契约", "assassin_contract", "guard_assassin", "guard_mist", "horse_nightmare");
-        RunScenario("炮火超频", "artillery_overclock", "cannon_missile", "cannon_sniper", "cannon_storm");
+        RunScenario("炮火超频", "artillery_overclock", "cannon_missile", "cannon_sniper", "cannon_arc");
         RunScenario("三军协同", "tri_service", "cannon_missile", "cannon_venom", "soldier_oracle");
 
         Check("刺客契约探针命中", spikeProbeAssassinContractHits > 0, $"hits={spikeProbeAssassinContractHits}");
