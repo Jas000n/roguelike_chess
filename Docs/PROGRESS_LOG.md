@@ -1900,3 +1900,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 采样观察，保持 warn-only 策略。
 2. C3：若需要进一步提升可用性，可给筛选模式补图标或快捷键提示。
+
+## 2026-03-15 02:20 EDT
+### Done
+- 完成上一轮 C3 Next-2：为事件回看筛选增加快捷键与提示。
+- 改动：
+  - 新增快捷键：`F6`（仅在事件回看面板展开时生效），循环切换 `全部/事件/战斗/经济`
+  - 面板内新增提示文案：`快捷键：F6 切换筛选`
+  - 切换时写入简短战报反馈：`事件回看筛选已切换`
+- 目的：减少鼠标点击成本，提高回看面板使用效率。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_filter_hotkey.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=1 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 采样观察，保持 warn-only 策略。
+2. C3：可考虑给筛选模式加小图标/颜色差异，进一步降低识别成本。

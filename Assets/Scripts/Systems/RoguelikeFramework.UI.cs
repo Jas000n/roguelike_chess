@@ -767,6 +767,7 @@ public partial class RoguelikeFramework
                 {
                     recentEventsFilterMode = (recentEventsFilterMode + 1) % 4;
                 }
+                GUI.Label(new Rect(26, 250 + topPad, 180, 18), "快捷键：F6 切换筛选");
 
                 int maxRows = Mathf.FloorToInt((panelH - 56f) / 18f);
                 int row = 0;

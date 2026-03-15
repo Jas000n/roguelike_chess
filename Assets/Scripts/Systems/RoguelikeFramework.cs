@@ -191,6 +191,11 @@ public partial class RoguelikeFramework : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F10)) DevSkipCurrentFloor();
         if (Input.GetKeyDown(KeyCode.F11)) DevSkipToBoss();
         if (Input.GetKeyDown(KeyCode.F12)) DevRunLockedCompHitProbe(24);
+        if (showRecentEventsPanel && Input.GetKeyDown(KeyCode.F6))
+        {
+            recentEventsFilterMode = (recentEventsFilterMode + 1) % 4;
+            battleLog = "事件回看筛选已切换";
+        }
         if (Input.GetKeyDown(KeyCode.B)) DevRunBalanceIterations(50);
         if (Input.GetKeyDown(KeyCode.N)) DevRunBalanceIterations(100);
         if (state == RunState.Prepare && Input.GetKeyDown(KeyCode.Space)) StartBattle();
