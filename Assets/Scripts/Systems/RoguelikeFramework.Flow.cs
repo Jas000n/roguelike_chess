@@ -1663,7 +1663,12 @@ public partial class RoguelikeFramework
         else if (effectiveType == StageType.Elite)
             PushEvent($"节点情报：第{st.floor}层为精英节点（建议补前排与控制）");
         else if (effectiveType == StageType.Boss)
+        {
             PushEvent($"节点情报：第{st.floor}层为Boss节点（建议保留关键经济与刷新）");
+            int boardPower = deploySlots.Count;
+            int reserveGold = Mathf.Max(0, gold - 20);
+            PushEvent($"Boss前状态：生命{playerLife} / 金币{gold} / 上阵{boardPower}，可机动金币约{reserveGold}");
+        }
     }
 
     private void StartBattle()
