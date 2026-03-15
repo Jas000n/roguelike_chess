@@ -1649,6 +1649,13 @@ public partial class RoguelikeFramework
             battleLog = battleLog + " | " + prepMsg;
         else
             battleLog = prepMsg;
+
+        if (effectiveType == StageType.Shop)
+            PushEvent($"节点情报：第{st.floor}层为商店节点（额外金币与免费刷新）");
+        else if (effectiveType == StageType.Elite)
+            PushEvent($"节点情报：第{st.floor}层为精英节点（建议补前排与控制）");
+        else if (effectiveType == StageType.Boss)
+            PushEvent($"节点情报：第{st.floor}层为Boss节点（建议保留关键经济与刷新）");
     }
 
     private void StartBattle()

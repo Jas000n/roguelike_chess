@@ -2577,3 +2577,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：继续补样本到 early/late 各 >=5，做一次“权重方向一致性”检查。
 2. C3：在 Shop/Boss 前再补一个轻量机制或提示差异化，不影响现有回归稳定性。
+
+## 2026-03-15 15:31 EDT
+### Done
+- 继续 Stage C3：把节点差异化提示从“准备阶段文字”扩展到“事件流可回看”，增强对局内可读性。
+- 代码改动（`RoguelikeFramework.Flow.cs` / `StartPreparationForCurrentStage`）：
+  - 对 Shop/Elite/Boss 节点新增 `PushEvent`：
+    - Shop：商店节点加成提示（额外金币+免费刷新）
+    - Elite：精英节点策略提示（补前排与控制）
+    - Boss：Boss 节点策略提示（保留关键经济与刷新）
+- 目的：让节点差异化信息进入 recent events 面板，减少信息仅在瞬时 battleLog 中被覆盖的问题。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_stage_event_feed.log`
+- 关键日志：
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][SPIKE_WARN_WINDOW] samples=39 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 继续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` → early/mid/late 均已达到 `>=5`（early=5, mid=9, late=5）。
+
+### Next
+1. C3：对 early/mid/late 样本做一次“方向性对照结论”写入文档（是否符合预期偏置）。
+2. C3：继续低风险差异化（Shop/Boss 前）并保持 batch 全绿。
