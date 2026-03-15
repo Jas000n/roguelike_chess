@@ -2553,3 +2553,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：继续累积 mystery 分桶样本（early/late 各 ≥5），确认楼层偏置的方向稳定。
 2. C3：在不加高风险改动的前提下，继续补一项 Shop/Boss 前轻机制或提示强化。
+
+## 2026-03-15 15:00 EDT
+### Done
+- 继续 Stage C3：把神秘节点揭示结果从“仅开发日志可见”提升为“战报事件可见”。
+- 代码改动（`RoguelikeFramework.Data.cs` / `RevealMysteryNode`）：
+  - 新增 `PushEvent("神秘节点揭示：第X层 -> 类型")`。
+- 目的：让玩家侧/回看面板能直接看到神秘节点揭示结果，提升路线因果可读性。
+
+### Verify
+- 回归日志：
+  - `Builds/build_devloop_cycle_c3_reveal_event_r1.log`
+  - `Builds/build_devloop_cycle_c3_reveal_event_r2.log`
+- 关键日志：
+  - 两轮均包含 `[DEV][MYSTERY_REVEAL] ...` 与 `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - 两轮均 `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - 两轮均 `[DEV][SPIKE_WARN_WINDOW] ... recent=10 warn_runs=0 warn_total=0`
+  - 两轮均 `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 继续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` → early/mid/late 样本继续增加（当前 early=4, mid=8, late=4）。
+
+### Next
+1. C3：继续补样本到 early/late 各 >=5，做一次“权重方向一致性”检查。
+2. C3：在 Shop/Boss 前再补一个轻量机制或提示差异化，不影响现有回归稳定性。
