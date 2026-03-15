@@ -1724,3 +1724,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续周期采样 warn-only，若 warn 比例抬升再启 soft-gate。
 2. C3：考虑给事件结果增加短时颜色回显（成功偏绿/代价偏红）以强化后果感知。
+
+## 2026-03-14 22:50 EDT
+### Done
+- 按 C2 当前执行继续采样：新增 warn-only 样本 `sample_13 ~ sample_15`。
+- 新增三轮均通过 Batch，且能持续捕捉“炮火超频”偶发低占比告警：
+  - sample13: `warn=1`（炮火超频 0.27 < 0.35）
+  - sample14: `warn=0`
+  - sample15: `warn=1`（炮火超频 0.25 < 0.35）
+- 截止目前（sample1~15）统计：
+  - `samples=15`
+  - `warn_runs=6`
+  - `warn_total=6`
+  - `all_passed=true`
+
+### Verify
+- 日志：
+  - `Builds/build_devloop_cycle_c2_warn_sample_13.log`
+  - `Builds/build_devloop_cycle_c2_warn_sample_14.log`
+  - `Builds/build_devloop_cycle_c2_warn_sample_15.log`
+- 关键输出：
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=1/0/1`
+  - `[DEV][BATCH] PASSED failCount=0`（三轮）
+
+### Next
+1. C2：改为“最近10轮窗口”统计（而非累计），避免历史样本稀释近期波动；据此再评估 soft-gate 触发线。
+2. C3：继续事件结果反馈强化（可视化回显）并保持 smoke 全绿。
