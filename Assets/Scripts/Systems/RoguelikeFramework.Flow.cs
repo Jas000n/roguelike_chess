@@ -1640,7 +1640,9 @@ public partial class RoguelikeFramework
         string prepMsg = $"准备阶段：第{st.floor}层({StageName(effectiveType)}) | +{roundBaseGold}+利息{interest}+连胜/败{streakGold}" +
                          (HasHex("reroll_engine") ? " | 精密改造：本回合2次免费刷新" : "") +
                          (HasHex("royal_supply") ? " | 王庭军需：额外+6金币" : "") +
-                         (effectiveType == StageType.Shop ? " | 商店节点：额外+6金币 +2次免费刷新" : "");
+                         (effectiveType == StageType.Shop ? " | 商店节点：额外+6金币 +2次免费刷新" : "") +
+                         (effectiveType == StageType.Elite ? " | 精英节点：敌方强度提升，建议补前排与控制" : "") +
+                         (effectiveType == StageType.Boss ? " | Boss节点：建议保留关键刷新/经济，优先成型主羁绊" : "");
 
         // 若触发了低血保底，保留该提示并拼接准备阶段信息，避免关键信息被覆盖。
         if (!string.IsNullOrEmpty(battleLog) && battleLog.StartsWith("濒危补给触发"))

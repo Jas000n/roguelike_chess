@@ -2529,3 +2529,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：继续累积 early/late 桶样本（目标各 >=5）后再对比是否接近设计偏置方向。
 2. C3：推进下一项低风险差异化（Shop/Boss 前提示或轻机制），并保持 batch 全绿。
+
+## 2026-03-15 14:30 EDT
+### Done
+- 继续 Stage C3 的低风险差异化：为 Elite/Boss 准备阶段增加策略提示文案（不改数值，仅增强引导与可读性）。
+- 代码改动（`RoguelikeFramework.Flow.cs` / `StartPreparationForCurrentStage`）：
+  - Elite 节点新增提示：`精英节点：敌方强度提升，建议补前排与控制`
+  - Boss 节点新增提示：`Boss节点：建议保留关键刷新/经济，优先成型主羁绊`
+- 目的：强化 C3 的节点差异感与决策提示，降低新玩家在高压节点前的信息缺口。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_stage_hint_msg.log`
+- 关键日志：
+  - `[DEV][SPIKE_WARN_WINDOW] samples=36 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本复核：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 持续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` → early/mid/late 继续有样本覆盖。
+
+### Next
+1. C3：继续累积 mystery 分桶样本（early/late 各 ≥5），确认楼层偏置的方向稳定。
+2. C3：在不加高风险改动的前提下，继续补一项 Shop/Boss 前轻机制或提示强化。
