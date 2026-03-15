@@ -499,6 +499,15 @@ public partial class RoguelikeFramework
         };
     }
 
+    private Color EventTagColor(string evt)
+    {
+        string tagged = FormatEventForReview(evt);
+        if (tagged.StartsWith("[事件]")) return new Color(0.88f, 0.80f, 0.46f, 1f);
+        if (tagged.StartsWith("[战斗]")) return new Color(0.88f, 0.52f, 0.52f, 1f);
+        if (tagged.StartsWith("[经济]")) return new Color(0.58f, 0.88f, 0.58f, 1f);
+        return Color.white;
+    }
+
     private void DrawHudInfoStrip(Rect rect, string text, TextAnchor align = TextAnchor.MiddleLeft)
     {
         Color old = GUI.color;
@@ -775,7 +784,10 @@ public partial class RoguelikeFramework
                 {
                     string evt = recentEvents[recentEvents.Count - 1 - i];
                     if (!EventPassesFilter(evt)) continue;
+                    Color oldEventColor = GUI.color;
+                    GUI.color = EventTagColor(evt);
                     GUI.Label(new Rect(26, 266 + topPad + row * 18, leftW - 20f, 18), FormatEventForReview(evt));
+                    GUI.color = oldEventColor;
                     row++;
                 }
                 if (row == 0)

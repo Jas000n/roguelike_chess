@@ -1923,3 +1923,29 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 采样观察，保持 warn-only 策略。
 2. C3：可考虑给筛选模式加小图标/颜色差异，进一步降低识别成本。
+
+## 2026-03-15 02:50 EDT
+### Done
+- 完成上一轮 C3 Next-2：为事件回看面板增加“类别颜色差异”，提升快速识别。
+- 改动：
+  - 新增 `EventTagColor(evt)`：
+    - 事件=暖金色
+    - 战斗=暖红色
+    - 经济=绿色
+    - 其他=白色
+  - 回看列表渲染时按类别上色（保留文字标签）。
+- 效果：在不增加 UI 复杂度的情况下，扫描速度更快。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_filter_color.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 采样观察，保持 warn-only 策略。
+2. C3：若需要进一步降低认知负担，可把筛选按钮文字换为图标+文字组合。
