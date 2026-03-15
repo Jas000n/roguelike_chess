@@ -2603,3 +2603,31 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：对 early/mid/late 样本做一次“方向性对照结论”写入文档（是否符合预期偏置）。
 2. C3：继续低风险差异化（Shop/Boss 前）并保持 batch 全绿。
+
+## 2026-03-15 16:00 EDT
+### Done
+- 继续 Stage C3：对 mystery 分桶观测脚本做“方向性对照”增强，输出是否符合当前设计意图。
+- 改动（`Docs/devloop/c3_mystery_reveal_summary.py`）：
+  - 新增 `direction_check`：
+    - early: `shop >= treasure`（前期更偏运营补给）
+    - late: `(elite + treasure) >= shop`（后期更偏挑战/高价值）
+  - 输出 `PASS/WARN` 与对应计数。
+- 本轮回归与统计显示方向性检查通过。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_direction_check.log`
+- 关键日志：
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][SPIKE_WARN_WINDOW] samples=40 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 继续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` 输出：
+    - `direction_check early(shop>=treasure): PASS | shop=2 treasure=1`
+    - `direction_check late((elite+treasure)>=shop): PASS | elite+treasure=2 shop=2`
+
+### Next
+1. C3：继续采样并观察 direction_check 是否长期保持 PASS，若出现 WARN 再微调权重。
+2. C3：补一项 Shop/Boss 前轻机制差异化（保持低风险 + 全链路回归）。

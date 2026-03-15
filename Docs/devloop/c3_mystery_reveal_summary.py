@@ -46,3 +46,24 @@ for bucket in ["early", "mid", "late"]:
         continue
     detail = ", ".join(f"{k}:{v}({v/total:.0%})" for k, v in c.most_common())
     print(f"{bucket}: total={total} | {detail}")
+
+# Directionality check against C3 intent
+# early: prefer Shop over Treasure
+# late: prefer Elite+Treasure over Shop
+early = by_bucket["early"]
+late = by_bucket["late"]
+if sum(early.values()) > 0:
+    early_shop = early.get("Shop", 0)
+    early_treasure = early.get("Treasure", 0)
+    early_ok = early_shop >= early_treasure
+    print(f"direction_check early(shop>=treasure): {'PASS' if early_ok else 'WARN'} | shop={early_shop} treasure={early_treasure}")
+else:
+    print("direction_check early(shop>=treasure): N/A")
+
+if sum(late.values()) > 0:
+    late_elite_treasure = late.get("Elite", 0) + late.get("Treasure", 0)
+    late_shop = late.get("Shop", 0)
+    late_ok = late_elite_treasure >= late_shop
+    print(f"direction_check late((elite+treasure)>=shop): {'PASS' if late_ok else 'WARN'} | elite+treasure={late_elite_treasure} shop={late_shop}")
+else:
+    print("direction_check late((elite+treasure)>=shop): N/A")
