@@ -723,6 +723,22 @@ public partial class RoguelikeFramework
             {
                 GUI.Label(new Rect(26, 146 + topPad + i * 18, 360, 18), recentEvents[recentEvents.Count - 1 - i]);
             }
+
+            if (GUI.Button(new Rect(16 + leftW - 114, 134 + topPad, 104, 24), showRecentEventsPanel ? "收起回看" : "回看事件"))
+            {
+                showRecentEventsPanel = !showRecentEventsPanel;
+            }
+
+            if (showRecentEventsPanel)
+            {
+                float panelH = Mathf.Min(268f, 58f + recentEvents.Count * 18f);
+                GUI.Box(new Rect(16, 226 + topPad, leftW, panelH), "事件回看（最近优先）");
+                int maxRows = Mathf.FloorToInt((panelH - 38f) / 18f);
+                for (int i = 0; i < recentEvents.Count && i < maxRows; i++)
+                {
+                    GUI.Label(new Rect(26, 246 + topPad + i * 18, leftW - 20f, 18), recentEvents[recentEvents.Count - 1 - i]);
+                }
+            }
         }
 
         string stateText = state switch

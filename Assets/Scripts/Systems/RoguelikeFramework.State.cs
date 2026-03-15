@@ -63,6 +63,7 @@ public partial class RoguelikeFramework
     private bool showTooltip;
     private string tooltipText = "";
     private Vector2 tooltipPos;
+    private bool showRecentEventsPanel;
 
     private readonly List<string> shopOffers = new();
     private int lockedCompMissStreak;

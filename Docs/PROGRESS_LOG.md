@@ -1826,3 +1826,25 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：保持 warn-only，继续用 recent10 口径滚动观察；若再升至 `>=5/10` 再触发 soft-gate 提示升级。
 2. C3：考虑增加“最近事件回看”入口，配合现有 toast，形成完整反馈闭环。
+
+## 2026-03-15 00:50 EDT
+### Done
+- 完成上一轮 C3 Next-2：增加“最近事件回看”入口，与 toast 形成双层反馈。
+- UI 改动：
+  - 事件列表区新增按钮：`回看事件 / 收起回看`
+  - 展开后显示“事件回看（最近优先）”面板，按可用高度展示最近多条事件
+- 目标：避免 toast 消失后信息丢失，支持玩家快速回顾最近关键结算（事件/奖励/里程碑等）。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_event_review_panel.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=1 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 滚动观察，保持 warn-only 策略直到触发线再次升高。
+2. C3：可考虑给“回看事件”面板加分类标签（事件/战斗/经济）提升检索效率。
