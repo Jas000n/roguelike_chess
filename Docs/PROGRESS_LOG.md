@@ -1803,3 +1803,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 观察，按 soft-gate 提示策略跟踪 3~5 轮样本波动。
 2. C3：若继续强化，可在事件结算后补“一键回看最近事件”小面板入口，减少信息丢失。
+
+## 2026-03-15 00:20 EDT
+### Done
+- 完成上一轮 C2 Next-1：继续补 3 轮 warn-only 样本（sample_16~18），并用 recent10 口径复评 soft-gate。
+- 统计结果（`c2_warn_summary.py`）：
+  - all: `samples=18 warn_runs=6 warn_total=6 pass_rate=1.00`
+  - recent10: `warn_runs=3/10 warn_total=3 pass_rate=1.00`
+  - recommendation: `keep warn-only`
+- 同步更新策略草案：`Docs/devloop/C2_WARN_POLICY_DRAFT.md`
+  - 明确 recent10 作为主决策窗口
+  - 记录样本回落结论（近期低于 soft-gate 触发线）
+
+### Verify
+- 样本日志：
+  - `Builds/build_devloop_cycle_c2_warn_sample_16.log`
+  - `Builds/build_devloop_cycle_c2_warn_sample_17.log`
+  - `Builds/build_devloop_cycle_c2_warn_sample_18.log`
+- 汇总脚本：
+  - `python3 Docs/devloop/c2_warn_summary.py`
+
+### Next
+1. C2：保持 warn-only，继续用 recent10 口径滚动观察；若再升至 `>=5/10` 再触发 soft-gate 提示升级。
+2. C3：考虑增加“最近事件回看”入口，配合现有 toast，形成完整反馈闭环。
