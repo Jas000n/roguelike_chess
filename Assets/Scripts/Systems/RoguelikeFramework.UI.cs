@@ -772,11 +772,23 @@ public partial class RoguelikeFramework
                     3 => "$ 经济",
                     _ => "◉ 全部"
                 };
-                if (GUI.Button(new Rect(16 + leftW - 114, 250 + topPad, 104, 22), filterText))
+                Rect filterBtnRect = new Rect(16 + leftW - 114, 250 + topPad, 104, 22);
+                if (GUI.Button(filterBtnRect, filterText))
                 {
                     recentEventsFilterMode = (recentEventsFilterMode + 1) % 4;
                 }
                 GUI.Label(new Rect(26, 250 + topPad, 180, 18), "快捷键：F6 切换筛选");
+                if (filterBtnRect.Contains(Event.current.mousePosition))
+                {
+                    string hoverTip = recentEventsFilterMode switch
+                    {
+                        1 => "仅查看事件类记录",
+                        2 => "仅查看战斗类记录",
+                        3 => "仅查看经济类记录",
+                        _ => "显示全部记录"
+                    };
+                    GUI.Label(new Rect(210, 250 + topPad, leftW - 330f, 18), hoverTip);
+                }
 
                 int maxRows = Mathf.FloorToInt((panelH - 56f) / 18f);
                 int row = 0;

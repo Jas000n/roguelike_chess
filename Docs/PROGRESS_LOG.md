@@ -1973,3 +1973,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 采样观察，保持 warn-only 策略。
 2. C3：如继续打磨，可为筛选按钮补 hover 提示，进一步降低学习成本。
+
+## 2026-03-15 03:50 EDT
+### Done
+- 完成上一轮 C3 Next-2：为事件回看筛选按钮补充 hover 提示文案。
+- 行为：鼠标悬停筛选按钮时，根据当前筛选模式显示说明：
+  - 全部：显示全部记录
+  - 事件：仅查看事件类记录
+  - 战斗：仅查看战斗类记录
+  - 经济：仅查看经济类记录
+- 目的：进一步降低首次使用时的理解成本，不改变现有交互与快捷键逻辑。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_filter_hover_hint.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 采样观察，保持 warn-only 策略。
+2. C3：如需继续打磨，可将 hover 提示替换为更统一的 tooltip 组件样式。
