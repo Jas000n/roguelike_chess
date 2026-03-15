@@ -67,3 +67,9 @@ if sum(late.values()) > 0:
     print(f"direction_check late((elite+treasure)>=shop): {'PASS' if late_ok else 'WARN'} | elite+treasure={late_elite_treasure} shop={late_shop}")
 else:
     print("direction_check late((elite+treasure)>=shop): N/A")
+
+# Confidence hints (sample adequacy)
+early_n = sum(early.values())
+late_n = sum(late.values())
+print(f"confidence early_samples: {early_n} ({'OK' if early_n >= 5 else 'LOW'})")
+print(f"confidence late_samples: {late_n} ({'OK' if late_n >= 5 else 'LOW'})")

@@ -2730,3 +2730,30 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：保持 low-risk 节奏，下一轮可补“节点情报”在回看面板中的分类可见性（若需要）。
 2. 持续回归全链路，确保 C2/C3 稳定性不回退。
+
+## 2026-03-15 19:01 EDT
+### Done
+- 继续 Stage C3 可观测性收敛：增强 `Docs/devloop/c3_mystery_reveal_summary.py`，新增样本充足度提示（confidence）。
+- 脚本新增输出：
+  - `confidence early_samples: N (OK/LOW)`
+  - `confidence late_samples: N (OK/LOW)`
+- 目的：在方向性 PASS/WARN 之外，补上“结论是否有足够样本支持”的显式信号，避免小样本过度解读。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_confidence_hint.log`
+- 关键日志：
+  - `[DEV][SPIKE_WARN_WINDOW] samples=45 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 ...`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 持续 `0/10`
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py` 输出：
+    - `direction_check ... PASS`
+    - `confidence early_samples: 11 (OK)`
+    - `confidence late_samples: 11 (OK)`
+
+### Next
+1. C3：在 confidence 已 OK 的前提下，继续监控 direction_check 是否长期稳定 PASS。
+2. 继续低风险节点信息优化并保持 batch 全链路回归全绿。
