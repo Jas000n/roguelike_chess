@@ -348,6 +348,7 @@ public partial class RoguelikeFramework
         }
         framework.DevRecordSpikeWarnSample();
         framework.DevRunEventRoomPrototypeSmokeTest();
+        framework.DevRunMysteryRevealBucketSmokeTest();
         framework.DevRunUnitDefsIntegritySmokeTest();
 
         if (framework.devBatchFailCount > 0)
@@ -1148,6 +1149,52 @@ public partial class RoguelikeFramework
         Check("冒险选项有资源变化", gold != goldBefore || playerLife != lifeBefore, $"gold:{goldBefore}->{gold}, life:{lifeBefore}->{playerLife}");
 
         Debug.Log($"[DEV][EVENT_ROOM_SMOKE] pass={pass} fail={fail} mode=both");
+    }
+
+    private void DevRunMysteryRevealBucketSmokeTest()
+    {
+        int pass = 0;
+        int fail = 0;
+
+        void Check(string name, bool ok, string detail)
+        {
+            if (ok) pass++;
+            else
+            {
+                fail++;
+                devBatchFailCount++;
+                Debug.Log($"[DEV][MYSTERY_BUCKET_SMOKE][FAIL] {name} | {detail}");
+            }
+        }
+
+        if (!stageNodeById.TryGetValue("f3_1", out var earlyNode))
+        {
+            Check("存在前期神秘节点 f3_1", false, "node missing");
+            Debug.Log($"[DEV][MYSTERY_BUCKET_SMOKE] pass={pass} fail={fail}");
+            return;
+        }
+        if (!stageNodeById.TryGetValue("f10_1", out var lateNode))
+        {
+            Check("存在后期神秘节点 f10_1", false, "node missing");
+            Debug.Log($"[DEV][MYSTERY_BUCKET_SMOKE] pass={pass} fail={fail}");
+            return;
+        }
+
+        earlyNode.type = StageType.Mystery;
+        earlyNode.mysteryRevealed = false;
+        RevealMysteryNode(earlyNode);
+        var earlyType = GetEffectiveStageType(earlyNode);
+        Check("前期神秘节点可揭示", earlyNode.mysteryRevealed, $"revealed={earlyNode.mysteryRevealed}");
+        Check("前期揭示类型有效", earlyType != StageType.Mystery, $"type={earlyType}");
+
+        lateNode.type = StageType.Mystery;
+        lateNode.mysteryRevealed = false;
+        RevealMysteryNode(lateNode);
+        var lateType = GetEffectiveStageType(lateNode);
+        Check("后期神秘节点可揭示", lateNode.mysteryRevealed, $"revealed={lateNode.mysteryRevealed}");
+        Check("后期揭示类型有效", lateType != StageType.Mystery, $"type={lateType}");
+
+        Debug.Log($"[DEV][MYSTERY_BUCKET_SMOKE] pass={pass} fail={fail} early=f{earlyNode.floor}:{earlyType} late=f{lateNode.floor}:{lateType}");
     }
 
     private void DevRunUnitDefsIntegritySmokeTest()

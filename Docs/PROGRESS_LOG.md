@@ -2499,3 +2499,33 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：补一条可触发 early/late 桶的定向 dev 采样入口（当前回归样本主要落在 mid）。
 2. C3：基于分桶样本再校验前中后期揭示分布是否与设计偏置一致。
+
+## 2026-03-15 14:01 EDT
+### Done
+- 继续 Stage C3：新增“前/后期神秘节点定向采样”回归入口，补齐 early/late 桶可观测性。
+- 代码改动（`RoguelikeFramework.Flow.cs`）：
+  - 在 batch 流程加入 `DevRunMysteryRevealBucketSmokeTest()`。
+  - 新增 smoke test 行为：
+    - 定向取 `f3_1`（early）与 `f10_1`（late），重置为 Mystery 后执行 `RevealMysteryNode`。
+    - 校验节点成功揭示且类型不再是 `Mystery`。
+    - 输出汇总日志：`[DEV][MYSTERY_BUCKET_SMOKE] ... early=... late=...`
+- 目的：避免 C3 样本长期集中在 mid 桶，保证前后期权重策略可被持续验证。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_bucket_smoke.log`
+- 关键日志：
+  - `[DEV][MYSTERY_REVEAL] floor=3 ... weights=N:0.48,E:0.12,S:0.28,T:0.12`
+  - `[DEV][MYSTERY_REVEAL] floor=10 ... weights=N:0.28,E:0.28,S:0.12,T:0.32`
+  - `[DEV][MYSTERY_BUCKET_SMOKE] pass=4 fail=0 early=f3:Shop late=f10:Treasure`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+- 统计脚本：
+  - `python3 Docs/devloop/c3_mystery_reveal_summary.py`
+  - 现有输出已覆盖 early/mid/late 三个桶（early=1, mid=5, late=1）。
+- C2 稳定性复核：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 继续 `warn_runs=0/10`。
+
+### Next
+1. C3：继续累积 early/late 桶样本（目标各 >=5）后再对比是否接近设计偏置方向。
+2. C3：推进下一项低风险差异化（Shop/Boss 前提示或轻机制），并保持 batch 全绿。
