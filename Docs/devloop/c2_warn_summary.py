@@ -89,6 +89,7 @@ print(f"recent5 trend: warns={recent5_warns} avg={recent5_avg:.2f}")
 
 # soft-gate recommendation
 recent_warn_runs = sum(1 for _, w, *_ in recent if w > 0)
+recent_warn_total = sum(w for _, w, *_ in recent)
 recent_warn_a = sum(a for _, _, a, _, _, _ in recent)
 recent_warn_o = sum(o for _, _, _, o, _, _ in recent)
 recent_warn_t = sum(t for _, _, _, _, t, _ in recent)
@@ -122,6 +123,17 @@ bucket_totals = {
 }
 dominant_bucket = max(bucket_totals, key=bucket_totals.get)
 dominant_value = bucket_totals[dominant_bucket]
+if recent_warn_total > 0:
+    print(
+        "bucket_share_recent10:",
+        ", ".join(
+            f"{k}={v/recent_warn_total:.2%}({v})"
+            for k, v in bucket_totals.items()
+        ),
+    )
+else:
+    print("bucket_share_recent10: none")
+
 if dominant_value > 0:
     print(f"dominant_warn_bucket: {dominant_bucket} ({dominant_value})")
     print(f"tuning_hint: prioritize small-step retune on {dominant_bucket} targetShare/bias")
