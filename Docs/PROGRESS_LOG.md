@@ -1949,3 +1949,27 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C2：继续 recent10 采样观察，保持 warn-only 策略。
 2. C3：若需要进一步降低认知负担，可把筛选按钮文字换为图标+文字组合。
+
+## 2026-03-15 03:20 EDT
+### Done
+- 完成上一轮 C3 Next-2：将事件回看筛选按钮升级为“图标+文字”组合，降低识别成本。
+- 新按钮文案：
+  - `◉ 全部`
+  - `★ 事件`
+  - `⚔ 战斗`
+  - `$ 经济`
+- 保留 F6 快捷切换逻辑，不改筛选行为，仅提升可读性。
+
+### Verify
+- Batch 回归：
+  - `Unity -batchmode -nographics -quit -projectPath DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile Builds/build_devloop_cycle_c3_filter_icon_text.log`
+- 关键日志：
+  - `[DEV][CONFIG_VALIDATE] pass=1 fail=0 | shopOdds=scriptable-object`
+  - `[DEV][UI_SMOKE] pass=18 fail=0`
+  - `[DEV][SPIKE_SCENARIO] pass=18 fail=0 warn=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+
+### Next
+1. C2：继续 recent10 采样观察，保持 warn-only 策略。
+2. C3：如继续打磨，可为筛选按钮补 hover 提示，进一步降低学习成本。

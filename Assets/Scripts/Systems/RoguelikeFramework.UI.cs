@@ -767,10 +767,10 @@ public partial class RoguelikeFramework
 
                 string filterText = recentEventsFilterMode switch
                 {
-                    1 => "筛选:事件",
-                    2 => "筛选:战斗",
-                    3 => "筛选:经济",
-                    _ => "筛选:全部"
+                    1 => "★ 事件",
+                    2 => "⚔ 战斗",
+                    3 => "$ 经济",
+                    _ => "◉ 全部"
                 };
                 if (GUI.Button(new Rect(16 + leftW - 114, 250 + topPad, 104, 22), filterText))
                 {
