@@ -2448,3 +2448,26 @@ Current Flow: Checked repository structure and DEV_LOOP.md. Identified Stage A1 
 ### Next
 1. C3：在当前楼层权重基础上，补一条可观测日志（mystery reveal type）用于后续节奏验证与调参。
 2. C3：继续小步差异化（优先 Shop 节点与 Boss 前节点体验提示/机制微调），并保持 batch 全绿。
+
+## 2026-03-15 13:00 EDT
+### Done
+- 继续 Stage C3：补齐神秘节点“可观测日志”以支持节奏验证与后续调参。
+- 代码改动（`RoguelikeFramework.Data.cs`）：
+  - 在 `RevealMysteryNode()` 揭示完成后新增日志：
+    - `[DEV][MYSTERY_REVEAL] floor=<n> roll=<x> type=<StageType> weights=N:<..>,E:<..>,S:<..>,T:<..>`
+- 目的：让楼层偏置策略从“黑盒随机”变为可追踪信号，便于检查前中后期揭示是否符合预期。
+
+### Verify
+- 回归命令：
+  - `"/Applications/Unity/Hub/Editor/6000.3.10f1/Unity.app/Contents/MacOS/Unity" -batchmode -nographics -quit -projectPath /Users/jason/.openclaw/workspace/DragonChessLegends -executeMethod RoguelikeFramework.DevRunRegression3FloorsBatch -logFile /Users/jason/.openclaw/workspace/DragonChessLegends/Builds/build_devloop_cycle_c3_mystery_reveal_observe.log`
+- 关键日志：
+  - `[DEV][MYSTERY_REVEAL] floor=8 roll=0.213 type=Normal weights=N:0.42,E:0.16,S:0.21,T:0.21`
+  - `[DEV][SPIKE_WARN_WINDOW] samples=31 recent=10 warn_runs=0 warn_total=0 ...`
+  - `[DEV][EVENT_ROOM_SMOKE] pass=8 fail=0 mode=both`
+  - `[DEV][BATCH] PASSED failCount=0`
+- C2 稳定性复核：
+  - `python3 Docs/devloop/c2_warn_summary.py` → recent10 仍为 `warn_runs=0/10`。
+
+### Next
+1. C3：基于 `MYSTERY_REVEAL` 日志再滚动几轮，确认前/后期权重是否被实际触发到对应类型。
+2. C3：在 Shop/Boss 前再做一项低风险差异化（优先提示与轻量机制），保持回归全绿。

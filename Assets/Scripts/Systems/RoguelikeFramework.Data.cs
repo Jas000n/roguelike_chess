@@ -505,6 +505,7 @@ public partial class RoguelikeFramework
         else node.revealedType = StageType.Treasure;
 
         node.mysteryRevealed = true;
+        Debug.Log($"[DEV][MYSTERY_REVEAL] floor={node.floor} roll={roll:F3} type={node.revealedType} weights=N:{pNormal:F2},E:{pElite:F2},S:{pShop:F2},T:{pTreasure:F2}");
     }
 
     private void SelectStageNode(string nodeId)
