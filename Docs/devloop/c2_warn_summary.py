@@ -83,10 +83,22 @@ recent_warn_a = sum(a for _, _, a, _, _, _ in recent)
 recent_warn_o = sum(o for _, _, _, o, _, _ in recent)
 recent_warn_t = sum(t for _, _, _, _, t, _ in recent)
 
+consecutive_warn_runs = 0
+for _, w, *_ in reversed(recent):
+    if w > 0:
+        consecutive_warn_runs += 1
+    else:
+        break
+
 if recent_warn_runs >= 5:
     print("recommendation: TRIGGER soft-gate (recent10 warn_runs >= 5)")
 else:
     print("recommendation: keep warn-only (recent10 warn_runs < 5)")
+
+if consecutive_warn_runs >= 3:
+    print("tune_hint_window: TRIGGER (consecutive recent warns >= 3)")
+else:
+    print("tune_hint_window: keep observe (consecutive recent warns < 3)")
 
 bucket_totals = {
     "assassin_contract": recent_warn_a,
