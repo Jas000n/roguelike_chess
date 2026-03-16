@@ -24,3 +24,7 @@ print(f"heartbeat_snapshot_time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 print(c2_signal)
 print(c3_signal)
 print(c3_status)
+
+# one-line overall for heartbeat automation
+overall = "HEALTHY" if ("warn_runs=0/10" in c2_signal and "status=STABLE" in c3_signal) else "CHECK"
+print(f"heartbeat_overall: {overall}")
