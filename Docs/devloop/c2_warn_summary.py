@@ -144,3 +144,6 @@ if dominant_value > 0:
         print("tuning_hint: keep observe until dominant bucket has enough support")
 else:
     print("dominant_warn_bucket: none")
+
+# one-line heartbeat-friendly signal
+print(f"c2_heartbeat_signal: warn_runs={recent_warn_runs}/10 warn_total={recent_warn_total}")
