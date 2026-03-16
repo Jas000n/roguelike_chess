@@ -81,3 +81,6 @@ if status == "STABLE":
     print(f"c3_mystery_status: {status} (direction_checks=PASS/PASS, confidence=OK/OK)")
 else:
     print(f"c3_mystery_status: {status} (need early>=5 and late>=5)")
+
+# one-line heartbeat-friendly signal
+print(f"c3_heartbeat_signal: status={status} early={early_n} late={late_n}")
