@@ -77,4 +77,7 @@ print(f"confidence early_samples: {early_n} ({'OK' if early_ok_conf else 'LOW'})
 print(f"confidence late_samples: {late_n} ({'OK' if late_ok_conf else 'LOW'})")
 
 status = "STABLE" if early_ok_conf and late_ok_conf else "NEEDS_MORE_SAMPLES"
-print(f"c3_mystery_status: {status}")
+if status == "STABLE":
+    print(f"c3_mystery_status: {status} (direction_checks=PASS/PASS, confidence=OK/OK)")
+else:
+    print(f"c3_mystery_status: {status} (need early>=5 and late>=5)")
