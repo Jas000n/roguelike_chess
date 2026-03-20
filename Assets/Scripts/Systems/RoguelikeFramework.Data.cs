@@ -507,7 +507,15 @@ public partial class RoguelikeFramework
         node.mysteryRevealed = true;
         Debug.Log($"[DEV][MYSTERY_REVEAL] floor={node.floor} roll={roll:F3} type={node.revealedType} weights=N:{pNormal:F2},E:{pElite:F2},S:{pShop:F2},T:{pTreasure:F2}");
         string bucket = node.floor <= 4 ? "前期" : (node.floor >= 9 ? "后期" : "中期");
-        PushEvent($"神秘节点揭示：第{node.floor}层({bucket}) -> {StageName(node.revealedType)}");
+        string revealMsg = $"神秘节点揭示：第{node.floor}层({bucket}) -> {StageName(node.revealedType)}";
+        
+        // Shop 节点额外情报：当前可购海克斯数量
+        if (node.revealedType == StageType.Shop)
+        {
+            revealMsg += " ⚡";
+        }
+        
+        PushEvent(revealMsg);
     }
 
     private void SelectStageNode(string nodeId)

@@ -820,7 +820,9 @@ public partial class RoguelikeFramework
             RunState.GameOver => "章节结束",
             _ => "状态未知"
         };
-        GUI.Box(new Rect(rightX, 16 + topPad, rightW, 48), $"当前状态：{stateText}");
+        string floorHint = state == RunState.Prepare || state == RunState.Battle || state == RunState.Reward || state == RunState.Event || state == RunState.Hex ? $"第{stageIndex + 1}关" : "";
+        string stateDisplay = string.IsNullOrEmpty(floorHint) ? $"当前状态：{stateText}" : $"当前状态：{stateText} ({floorHint})";
+        GUI.Box(new Rect(rightX, 16 + topPad, rightW, 48), stateDisplay);
         GUI.Box(new Rect(rightX, 70 + topPad, rightW, 46), "情报提示：点击棋子或羁绊卡片查看详细说明");
 
         if (GUI.Button(new Rect(guiW - 126, 14 + topPad, 108, 28), showDevTools ? "收起开发" : "开发工具"))

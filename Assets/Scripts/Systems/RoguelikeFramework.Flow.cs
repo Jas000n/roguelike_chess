@@ -1679,6 +1679,13 @@ public partial class RoguelikeFramework
             int reserveGold = Mathf.Max(0, gold - 20);
             PushEvent($"Boss前状态：生命{playerLife} / 金币{gold} / 上阵{boardPower}，可机动金币约{reserveGold}");
         }
+        else if (effectiveType == StageType.Treasure)
+        {
+            PushEvent($"节点情报：第{st.floor}层为宝箱节点（高价值奖励）");
+            int boardPower = deploySlots.Count;
+            int benchSpace = benchUnits.Count;
+            PushEvent($"宝箱前状态：上阵{boardPower} / 备战席{benchSpace}，建议预留空间以便选择奖励单位");
+        }
     }
 
     private void StartBattle()
